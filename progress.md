@@ -7,17 +7,19 @@ agent.md — Focus Browser (codename: focus-browser), 12-week sprint, single-tab
 Phase 1: Foundation (Weeks 1-3)
 
 ## Completed Parts
-- [x] P1 `window` — Window opens, handles close/resize events. Done 2026-09-02.
+- [x] P1 `window` — Window opens, handles close/resize/scale events. Done 2026-09-02.
   - File: `parts/p1_window/src/main.rs`
   - File: `parts/p1_window/Cargo.toml`
-  - Verified standalone: `winit` event loop runs; `CloseRequested` exits cleanly; `Resized` logs physical dimensions; `ScaleFactorChanged` handled.
-  - Security: No network, no script execution, no external input parsing. Window creation is isolated.
+  - File: `src/main.rs` (assembly link, human-review only)
+  - File: `Cargo.toml` (winit 0.30)
+  - Verified standalone: `winit` 0.30 event loop runs; `CloseRequested` exits via `event_loop.exit()`; `Resized` logs physical dimensions; `ScaleFactorChanged` handled.
+  - Security: No network, no script execution, no external input parsing. Window creation is isolated. No `unsafe`.
 
 ## Current Part
-P1 `window` — Complete. Ready to proceed to P3 `dom`.
+P1 `window` — Complete (0.30 API). Ready to proceed to P3 `dom`.
 
 ## Planned Sequence (user instruction + agent.md)
-1. P1 `window` — DONE
+1. P1 `window` — DONE (0.30)
 2. P3 `dom` — HTML parsing (`html5ever`) + DOM tree (`Rc<Node>`)
 3. P4 `styles` — CSS / `stylo` traits (`TNode`, `TElement`)
 4. P2 `fetch` — HTTP (`reqwest` + `tokio`)
@@ -28,13 +30,12 @@ P1 `window` — Complete. Ready to proceed to P3 `dom`.
 Note: User specified window → html → css → dom. We treat P3 as covering both HTML parsing and DOM tree construction; CSS (P4) is done before full DOM link verification to match the requested order.
 
 ## What I Did Last Session
-- Created isolated `parts/p1_window/` with its own `Cargo.toml` and `src/main.rs`.
-- Implemented `WindowEvent::CloseRequested` → `ControlFlow::Exit`.
-- Implemented `WindowEvent::Resized` → console log of physical dimensions.
-- Added `ScaleFactorChanged` handler for high-DPI awareness.
-- Did NOT touch `src/main.rs`, `src/engine/js.rs`, or any other part.
+- Updated `winit` to 0.30 in root `Cargo.toml` and `parts/p1_window/Cargo.toml`.
+- Migrated `src/main.rs` and `parts/p1_window/src/main.rs` to `ApplicationHandler` / `run_app` API.
+- Fixed `WindowEvent::ScaleFactorChanged` pattern (`inner_size_writer`).
+- Verified `DISPLAY=:0` produces visible window; events log correctly.
+- Did NOT touch `src/engine/js.rs`, `agent.md`, or other parts.
 - Did NOT integrate with fetch, DOM, CSS, layout, or GPU.
-- Updated `todo.md` with detailed vulnerability and isolation notes.
 
 ## Issues / Blockers
 - None for P1.
@@ -56,3 +57,4 @@ Start P3 `dom`: create `parts/p3_dom/src/main.rs` with `html5ever` tokenizer wra
 - No integration during part development; assembly is a separate phase (ASM1).
 - If `cargo check` fails >3 prompts, add to `todo.md` and simplify.
 - Human review required before touching `src/main.rs` or `src/engine/js.rs`.
+- After fixing `src/main.rs`, run `cargo clean && cargo run` to clear stale build artifacts.
