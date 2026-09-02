@@ -17,12 +17,12 @@ impl eframe::App for App {
 
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-    println!("Renderer: egui (GPU via wgpu/glow) — checking wgpu adapters...");
+    println!("Renderer: egui (GPU via wgpu/glow) — forcing Vulkan specifically...");
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-        backends: wgpu::Backends::all(),
+        backends: wgpu::Backends::VULKAN,
         ..Default::default()
     });
-    for adapter in instance.enumerate_adapters(wgpu::Backends::all()) {
+    for adapter in instance.enumerate_adapters(wgpu::Backends::VULKAN) {
         let info = adapter.get_info();
         println!(
             "Adapter: {} | backend: {:?} | device_type: {:?}",
@@ -34,7 +34,7 @@ fn main() {
     // Security: isolated window creation; no network, no DOM, no JS, no GPU.
     // No integration with fetch/DOM/CSS until ASM1.
     // Note: We never used winit; window layer is eframe/egui.
-    println!("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
+    println!("Renderer: egui (Vulkan GPU forced) — CPU fallback disabled");
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
         "Focus Browser — P1 Window",
