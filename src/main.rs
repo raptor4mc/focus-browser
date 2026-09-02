@@ -35,11 +35,7 @@ fn main() {
     // No integration with fetch/DOM/CSS until ASM1.
     // Note: We never used winit; window layer is eframe/egui.
     println!("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
-    let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1024.0, 768.0]),
-        renderer: eframe::Renderer::Wgpu,
-        ..Default::default()
-    };
+    let native_options = eframe::NativeOptions::default();
     eframe::run_native(
         "Focus Browser — P1 Window",
         native_options,
