@@ -47,16 +47,11 @@ impl ApplicationHandler for App {
             WindowEvent::ScaleFactorChanged { scale_factor, inner_size_writer: _ } => {
                 println!("P1 Scale changed: factor={}", scale_factor);
             }
-            _ => {}
-        }
-    }
-
-    fn redraw_requested(&mut self, _event_loop: &ActiveEventLoop, window_id: WindowId) {
-        if let Some(ref window) = self.window {
-            if window.id() == window_id {
+            WindowEvent::RedrawRequested => {
                 // Black screen: default window background is black.
                 // No GPU/render integration until P6; this keeps P1 isolated.
             }
+            _ => {}
         }
     }
 }
