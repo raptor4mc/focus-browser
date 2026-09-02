@@ -1,7 +1,7 @@
 # Focus Browser Todo / Issues
 
 ## Active
-- [x] P1 `window`: `winit` window opens, handles `CloseRequested` and `Resized`. Verified standalone in `parts/p1_window/`.
+- [x] P1 `window`: `eframe` + `egui` window opens, black background, handles close/resize. Verified standalone in `parts/p1_window/`. We never used winit.
 - [ ] P3 `dom`: Implement `html5ever` → `Rc<Node>` tree. Need to decide `Rc<RefCell<Node>>` vs arena (`indextree`). Must implement `first_child()`, `next_sibling()`, `parent_node()`.
 - [ ] P4 `styles`: Define `TNode`/`TElement` traits for `stylo`. Blocked until P3 node type is fixed.
 - [ ] P2 `fetch`: `reqwest` + `tokio` HTTP client. Can be done standalone, but assembly needs it after P3/P4.
@@ -17,13 +17,15 @@
 - [ ] P2: `reqwest` must disable redirects to `file://` and restrict to `http/https`; validate URL before fetch.
 - [ ] P7: `boa_engine` JS context must not expose `eval` or `Function` constructor until sandbox is defined.
 - [ ] P6: `wgpu` shader compilation must not allow arbitrary SPIR-V injection.
-- [ ] General: No `unsafe` blocks unless required by `winit`/`wgpu` bindings; prefer safe Rust.
+- [ ] General: No `unsafe` blocks unless required by `eframe`/`egui`/`wgpu` bindings; prefer safe Rust.
 - [ ] General: Single process, no IPC, no background threads that could leak data between tabs (only one tab exists).
 - [ ] General: No multi-tab / multi-window; no audio/video/WebRTC; no extension API; no adblock (v1).
+- [ ] Note: Window layer uses eframe/egui; winit was never used.
 
 ## Resolved
-- [x] P1: Window not closing on X button → fixed by handling `WindowEvent::CloseRequested` and setting `ControlFlow::Exit`.
-- [x] P1: Resize events not logged → fixed by matching `WindowEvent::Resized`.
+- [x] P1: Window not closing on X button → fixed by `eframe` viewport close handling.
+- [x] P1: Resize events not logged → handled by `egui` viewport.
+- [x] P1: Black screen requested → implemented via `egui::CentralPanel` + `rect_filled`.
 
 ## Backlog (Not in current phase)
 - [ ] P11: Scroll inertia physics
@@ -32,5 +34,5 @@
 - [ ] P14: Chrome UI (URL bar, buttons, dark mode)
 
 ## Sequence Reminder (User + agent.md)
-Window (P1) → HTML (P3) → CSS (P4) → DOM tree verification (P3) → Fetch (P2) → Layout (P5) → GPU (P6) → Assembly (ASM1).
+Window (P1, eframe/egui) → HTML (P3) → CSS (P4) → DOM tree verification (P3) → Fetch (P2) → Layout (P5) → GPU (P6) → Assembly (ASM1).
 Do not skip steps. Do not integrate early. Verify each part with `cargo check` before moving on.

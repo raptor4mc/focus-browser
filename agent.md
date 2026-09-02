@@ -1,4 +1,3 @@
-
 # Focus Browser — Agent Specification
 
 ## Project Identity
@@ -7,6 +6,7 @@
 - **Target Audience:** Students, deep-work users, people who want one tab and zero distractions
 - **Philosophy:** One tab. Zero IPC. All RAM and CPU dedicated to the current page. Nothing runs in the background.
 - **AI Assistant:** Inkling Small only (1M context, 93 tok/s)
+- **Note:** We never used winit. The window layer has always been implemented with eframe and egui.
 
 ---
 
@@ -43,7 +43,7 @@ plain
 
 | Part | Name | What It Does | Success Criteria |
 |------|------|--------------|----------------|
-| **P1** | `window` | `winit` window + event loop | Window opens, handles close/resize events |
+| **P1** | `window` | `eframe` + `egui` window + event loop | Window opens, renders black background, handles close/resize |
 | **P2** | `fetch` | `reqwest` + `tokio` HTTP client | Can `GET https://example.com` and print bytes to console |
 | **P3** | `dom` | `html5ever` → DOM tree | Parses HTML string into traversable DOM (`Rc<Node>`) |
 | **P4** | `styles` | `stylo` trait impl + cascade | Implements `TNode`/`TElement`, computes styles for a DOM |
@@ -265,7 +265,7 @@ AI	Inkling Small only	1M context, 93 tok/s. No multi-agent overhead.
 Technology Stack
 Table
 Layer	Crate	Purpose
-Windowing	winit	Window + input events
+Windowing	eframe + egui	Window + input events + black background rendering
 HTTP	reqwest + tokio	Async fetch
 HTML	html5ever	Streaming parser → DOM
 CSS	stylo (style crate)	Parallel selector matching (Rayon)
