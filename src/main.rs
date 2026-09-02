@@ -16,7 +16,9 @@ impl eframe::App for App {
 }
 
 fn main() {
-    std::env::set_var("WGPU_BACKEND", "vulkan");
+    unsafe {
+        std::env::set_var("WGPU_BACKEND", "vulkan");
+    }
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     println!("Renderer: egui (GPU via wgpu/glow) — forcing Vulkan specifically...");
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
