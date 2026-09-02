@@ -21,6 +21,7 @@ Phase 1: Foundation (Weeks 1-3) — Skeleton integration in progress
 
 ## Integrated / Doing Now
 - [x] Skeleton integration — P2 fetch wired directly into `src/main.rs` via `tokio::runtime::Runtime` + `reqwest::get`. Root `Cargo.toml` updated with `reqwest` and `tokio`. Doing 2026-09-03.
+- [x] Build fix — `reqwest` default features disabled (`default-features = false`) to avoid `openssl-sys` / `pkg-config` dependency; using `rustls-tls` only. Done 2026-09-03.
 - [ ] Verify skeleton `cargo run`: window opens + fetch prints to terminal. Next session goal.
 
 ## Planned Sequence (user instruction + agent.md)
@@ -43,6 +44,7 @@ Note: User specified window → html → css → dom. We treat P3 as covering bo
 - Added adapter enumeration to terminal to confirm GPU vs CPU.
 - Created isolated P2 `fetch` part (`parts/p2_fetch/`).
 - Integrated P2 directly into skeleton: added `reqwest` + `tokio` to root `Cargo.toml`; added `tokio::runtime::Runtime::new()` + `reqwest::get("https://example.com")` block inside `src/main.rs`; updated `progress.md` and `todo.md`.
+- Fixed `openssl-sys` build failure by setting `reqwest` to `default-features = false, features = ["rustls-tls"]`.
 
 ## Issues / Blockers
 - None for P1 or P2.
@@ -68,3 +70,4 @@ Run `cargo run` in root to verify skeleton: window opens (P1) and fetch prints s
 - Window layer is eframe/egui; winit was never used.
 - P2 fetch is now integrated into skeleton; do not wire into `src/main.rs` again until ASM1.
 - All updates noted in `progress.md`; all plans/doing/finished noted in `todo.md`.
+- `reqwest` uses `rustls-tls` (no OpenSSL) to avoid `pkg-config` / `libssl-dev` dependency.
