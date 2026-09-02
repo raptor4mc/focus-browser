@@ -41,4 +41,3 @@
 Window (P1, eframe/egui) → HTML (P3) → CSS (P4) → DOM tree verification (P3) → Fetch (P2) → Layout (P5) → GPU (P6) → Assembly (ASM1).
 Do not skip steps. Do not integrate early. Verify each part with `cargo check` before moving on.
 Plan: verify skeleton now; then P3.
-```
