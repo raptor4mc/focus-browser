@@ -24,6 +24,6 @@ fn main() {
     eframe::run_native(
         "Focus Browser — P1 Window",
         native_options,
-        Box::new(|_cc| Box::new(App)),
+        Box::new(|_cc| Ok(Box::new(App))),
     ).expect("Event loop error");
 }
