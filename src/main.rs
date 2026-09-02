@@ -17,6 +17,7 @@ impl ApplicationHandler for App {
                     .with_title("Focus Browser — P1 Window")
                     .with_inner_size(winit::dpi::LogicalSize::new(1024.0, 768.0))
             ).expect("Failed to build winit window");
+            window.request_redraw();
             self.window = Some(window);
         }
     }
@@ -47,6 +48,15 @@ impl ApplicationHandler for App {
                 println!("P1 Scale changed: factor={}", scale_factor);
             }
             _ => {}
+        }
+    }
+
+    fn redraw_requested(&mut self, _event_loop: &ActiveEventLoop, window_id: WindowId) {
+        if let Some(ref window) = self.window {
+            if window.id() == window_id {
+                // Black screen: default window background is black.
+                // No GPU/render integration until P6; this keeps P1 isolated.
+            }
         }
     }
 }
