@@ -10,6 +10,7 @@ impl eframe::App for App {
                 0.0,
                 egui::Color32::BLACK,
             );
+            ui.label("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
         });
     }
 }
