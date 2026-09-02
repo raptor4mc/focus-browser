@@ -16,6 +16,19 @@ impl eframe::App for App {
 }
 
 fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    println!("Renderer: egui (GPU via wgpu/glow) — checking wgpu adapters...");
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::all(),
+        ..Default::default()
+    });
+    for adapter in instance.enumerate_adapters(wgpu::Backends::all()) {
+        let info = adapter.get_info();
+        println!(
+            "Adapter: {} | backend: {:?} | device_type: {:?}",
+            info.name, info.backend, info.device_type
+        );
+    }
     // Isolated P1 window: no integration with fetch, DOM, CSS, or GPU.
     // Note: We never used winit; window layer is eframe/egui.
     println!("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
