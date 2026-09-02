@@ -21,6 +21,7 @@ fn main() {
     // Security: isolated window creation; no network, no DOM, no JS, no GPU.
     // No integration with fetch/DOM/CSS until ASM1.
     // Note: We never used winit; window layer is eframe/egui.
+    println!("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([1024.0, 768.0]),
         ..Default::default()
