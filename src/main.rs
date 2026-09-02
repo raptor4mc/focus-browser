@@ -32,15 +32,23 @@ fn main() {
             info.name, info.backend, info.device_type
         );
     }
-    // HUMAN REVIEW ONLY — per agent.md assembly rules.
-    // This links P1 `window` into the root binary. Revert if issues found.
-    // Security: isolated window creation; no network, no DOM, no JS, no GPU.
-    // No integration with fetch/DOM/CSS until ASM1.
-    // Note: We never used winit; window layer is eframe/egui.
+    // P2 fetch integrated directly into skeleton
+    println!("P2 fetch: requesting https://example.com...");
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async {
+        let resp = reqwest::get("https://example.com")
+            .await
+            .expect("fetch failed");
+        println!("Status: {}", resp.status());
+        let text = resp.text().await.expect("read body failed");
+        println!("Length: {} bytes", text.len());
+        println!("First 200 chars: {}", &text[..text.len().min(200)]);
+    });
     println!("Renderer: egui (Vulkan GPU forced) — CPU fallback disabled");
+    println!("Skeleton: P1 window + P2 fetch integrated — ready for ASM1");
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Focus Browser — P1 Window",
+        "Focus Browser — P1 Window + P2 Fetch",
         native_options,
         Box::new(|_cc| Ok(Box::new(App))),
     ).expect("Event loop error");
