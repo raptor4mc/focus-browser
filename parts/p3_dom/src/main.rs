@@ -1,33 +1,25 @@
-mod dom;
-mod parser;
+use html5ever::tendril::TendrilSink;
+
+use p3_dom::dom::{Dom, parser::DomParser};
 
 fn main() {
-    println!("[VERBOSE] P3 DOM: greenfield flat-array DOM — aarch64 only, no Rc/RefCell/Box/Arc");
-    let mut dom = dom::Dom::new();
-    println!("[VERBOSE] P3 DOM: pre-allocated nodes={}, children={}, string_arena={} bytes",
-        dom.nodes.capacity(), dom.children.capacity(), dom.string_arena.capacity());
-
     let html = r#"<!DOCTYPE html><html><head><title>Test</title></head><body><div id="main"><p>Hello <b>world</b></p></div></body></html>"#;
-    println!("[VERBOSE] P3 DOM: parsing HTML string ({} chars) via html5ever TreeSink", html.len());
 
-    parser::parse_html(html, &mut dom);
+    let dom = Dom::new();
+    let parser = parse_document(DomParser::new(dom), Default::default());
+    let result = parser.one(html);
 
-    println!("[VERBOSE] P3 DOM: parse complete — total nodes = {}", dom.nodes.len());
-    for (i, node) in dom.nodes.iter().enumerate() {
-        let tag_name = if node.flags & 0x01 != 0 {
-            format!("tag_{}", node.tag)
+    println!("Total nodes: {}", result.dom.nodes.len());
+    for (i, node) in result.dom.nodes.iter().enumerate() {
+        let tag = if node.flags.contains(super::NodeFlags::IS_ELEMENT) {
+            result.dom.tag_names.get(node.tag as usize).map(|l| l.as_ref()).unwrap_or("unknown")
         } else {
-            "text".to_string()
+            "text"
         };
-        let parent = dom.parent[i];
-        let child_count = if i < dom.children_start.len() {
-            let start = dom.children_start[i] as usize;
-            let end = if i + 1 < dom.children_start.len() { dom.children_start[i + 1] as usize } else { dom.children.len() };
-            end.saturating_sub(start)
+        let parent = result.dom.parent[i];
+        let child_count = if i + 1 < result.dom.children_start.len() {
+            (result.dom.children_start[i + 1] - result.dom.children_start[i]) as usize
         } else { 0 };
-        println!("[VERBOSE] P3 DOM: node {} = {} | parent={} | child_count={} | flags={:#06x}",
-            i, tag_name, parent, child_count, node.flags);
+        println!("Node {}: tag={}, parent={}, children={}", i, tag, parent, child_count);
     }
-
-    println!("[VERBOSE] P3 DOM: no DOM API to JS. No CSSOM. No Shadow DOM. No WASM. Subtitles external.");
 }

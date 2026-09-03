@@ -1,4 +1,4 @@
-use html5ever::tree_builder::{TreeSink, NodeOrText, ElementFlags, QuirksMode};
+use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
 use html5ever::{QualName, Attribute};
 use html5ever::tendril::{StrTendril, TendrilSink};
 use markup5ever::{ExpandedName, ns};
@@ -22,7 +22,6 @@ impl DomParser {
     fn make_text_node(&mut self, text: StrTendril) -> u32 {
         let text_offset = self.dom.string_arena.len() as u32;
         self.dom.string_arena.extend_from_slice(text.as_bytes());
-
         let node_idx = self.dom.nodes.len() as u32;
         self.dom.nodes.push(super::Node {
             tag: 0,
@@ -33,7 +32,6 @@ impl DomParser {
             layout_index: 0,
             _pad: 0,
         });
-
         self.dom.parent.push(u32::MAX);
         self.temp_children.push(Vec::new());
         node_idx
@@ -44,38 +42,11 @@ impl TreeSink for DomParser {
     type Handle = u32;
     type Output = Self;
 
-    fn finish(mut self) -> Self::Output {
-        self.dom.children_start.clear();
-        self.dom.children.clear();
-        
-        let mut offset = 0u32;
-        for node_children in &self.temp_children {
-            self.dom.children_start.push(offset);
-            for &child in node_children {
-                self.dom.children.push(child);
-            }
-            offset += node_children.len() as u32;
-        }
-        self.dom.children_start.push(offset);
-        self
-    }
-
-    fn parse_error(&mut self, _msg: std::borrow::Cow<'static, str>) {}
-
-    fn get_document(&mut self) -> u32 { 0 }
-
-    fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
-        let node = &self.dom.nodes[*target as usize];
-        ExpandedName {
-            ns: &ns!(html),
-            local: &self.dom.tag_names[node.tag as usize],
-        }
-    }
-
-    fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, _flags: ElementFlags) -> u32 {
+    fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, _flags: ElementFlags) -> Self::Handle {
         let tag_str = name.local.as_ref();
         let tag_id = self.dom.intern_tag(&tag_str);
         let node_idx = self.dom.nodes.len() as u32;
+
         let attr_offset = self.dom.store_attrs(&attrs);
 
         self.dom.nodes.push(super::Node {
@@ -90,6 +61,7 @@ impl TreeSink for DomParser {
 
         self.dom.parent.push(u32::MAX);
         self.temp_children.push(Vec::new());
+
         node_idx
     }
 
@@ -123,16 +95,6 @@ impl TreeSink for DomParser {
         }
     }
 
-    fn reparent_children(&mut self, _node: &Self::Handle, _new_parent: &Self::Handle) {
-        // TODO
-    }
-
-    fn mark_script_already_started(&mut self, _node: &Self::Handle) {}
-
-    fn set_quirks_mode(&mut self, _mode: QuirksMode) {}
-
-    fn append_doctype_to_document(&mut self, _name: StrTendril, _public_id: StrTendril, _system_id: StrTendril) {}
-
     fn get_template_contents(&mut self, _target: &Self::Handle) -> Self::Handle {
         u32::MAX
     }
@@ -140,4 +102,74 @@ impl TreeSink for DomParser {
     fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
         x == y
     }
+
+    fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
+        let tag_id = self.dom.nodes[*target as usize].tag;
+        ExpandedName {
+            ns: &ns!(html),
+            local: &self.dom.tag_names[tag_id as usize],
+        }
+    }
+
+    fn set_quirks_mode(&mut self, _mode: QuirksMode) {
+        // Standards mode only
+    }
+
+    fn append_doctype_to_document(&mut self, _name: StrTendril, _public_id: StrTendril, _system_id: StrTendril) {
+        // Ignored
+    }
+
+    fn finish(mut self) -> Self::Output {
+        self.dom.children_start.clear();
+        self.dom.children.clear();
+        let mut offset = 0u32;
+        for node_children in &self.temp_children {
+            self.dom.children_start.push(offset);
+            for &child in node_children {
+                self.dom.children.push(child);
+            }
+            offset += node_children.len() as u32;
+        }
+        self.dom.children_start.push(offset);
+        self
+    }
+
+    fn parse_error(&mut self, _msg: std::borrow::Cow<'static, str>) {
+        // Ignore parse errors for greenfield
+    }
+
+    fn get_document(&mut self) -> Self::Handle {
+        0
+    }
+
+    fn create_comment(&mut self, _text: StrTendril) -> Self::Handle {
+        0
+    }
+
+    fn create_pi(&mut self, _target: StrTendril, _data: StrTendril) -> Self::Handle {
+        0
+    }
+
+    fn append_based_on_parent_node(&mut self, _parent: &Self::Handle, _prev: &Self::Handle, _child: NodeOrText<Self::Handle>) {
+        // Minimal
+    }
+
+    fn add_attrs_if_missing(&mut self, _target: &Self::Handle, _attrs: Vec<Attribute>) {
+        // Minimal
+    }
+
+    fn reparent_children(&mut self, _old_parent: &Self::Handle, _new_parent: &Self::Handle) {
+        // Minimal
+    }
+}
+
+pub fn parse_html(html: &str, dom: &mut Dom) {
+    use html5ever::parse_document;
+    use html5ever::ParseOpts;
+
+    let sink = DomParser::new(std::mem::replace(dom, Dom::new()));
+    let mut parser = parse_document(sink, ParseOpts::default());
+    parser.process(StrTendril::from_slice(html));
+    parser.finish();
+    println!("Parser finished — nodes written to flat array");
 }
