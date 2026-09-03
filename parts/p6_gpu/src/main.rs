@@ -20,4 +20,3 @@ fn main() {
     println!("[VERBOSE] P6 GPU: produced {} LayoutBox — ready for wgpu buffer upload", layout.len());
     println!("[VERBOSE] P6 GPU: no multi-tab, no audio, no WASM, subtitles external");
 }
-```
