@@ -1,7 +1,7 @@
 use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
 use html5ever::{QualName, Attribute, parse_document};
 use html5ever::tendril::{StrTendril, TendrilSink};
-use markup5ever::{ExpandedName, Namespace};
+use markup5ever::{ExpandedName, Namespace, LocalName};
 
 pub struct DomParser {
     pub dom: super::Dom,
@@ -65,10 +65,21 @@ impl TreeSink for DomParser {
     fn get_document(&mut self) -> u32 { 0 }
 
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
-        let node = &self.dom.nodes[*target as usize];
+        let idx = *target as usize;
+        if idx >= self.dom.nodes.len() {
+            return ExpandedName {
+                ns: &self.html_ns,
+                local: &LocalName::from("unknown"),
+            };
+        }
+        let node = &self.dom.nodes[idx];
+        let tag_id = node.tag;
+        let name = self.dom.tag_map.iter()
+            .find_map(|(k, &v)| if v == tag_id { Some(k.as_str()) } else { None })
+            .unwrap_or("unknown");
         ExpandedName {
             ns: &self.html_ns,
-            local: &self.dom.tag_names[node.tag as usize],
+            local: &LocalName::from(name),
         }
     }
 
