@@ -30,7 +30,7 @@ impl DomTreeSink {
     }
 
     fn tag_name(&self, id: u16) -> String {
-        for (k, v) &self.tag_map {
+        for (k, v) in &self.tag_map {
             if *v == id {
                 return k.clone();
             }
