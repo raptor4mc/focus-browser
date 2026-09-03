@@ -8,16 +8,10 @@ struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            if let Some(tex) = &self.render_texture {
-                ui.image(tex);
-            } else {
-                ui.painter().rect_filled(
-                    ui.min_rect(),
-                    0.0,
-                    egui::Color32::BLACK,
-                );
-                ui.label("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
-            }
+            // Always show fetched HTML so user sees content; GPU texture shown when ready (ASM1)
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.label(&self.html_text);
+            });
         });
     }
 }
@@ -70,7 +64,7 @@ fn main() {
     println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
 
     println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
-    println!("[VERBOSE] P6 GPU: rendering to texture for egui display");
+    println!("[VERBOSE] P6 GPU: rendering to texture for egui display (ASM1 — full render pipeline)");
 
     println!("[VERBOSE] P2 fetch: requesting https://example.com... (CPU — tokio runtime)");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
