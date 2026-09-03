@@ -9,7 +9,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(tex) = &self.render_texture {
-                ui.image(tex, ui.available_size());
+                ui.image(tex);
             } else {
                 ui.painter().rect_filled(
                     ui.min_rect(),

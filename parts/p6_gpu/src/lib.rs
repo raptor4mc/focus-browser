@@ -1,4 +1,3 @@
-use wgpu::{BufferUsages, BufferDescriptor, BindGroupLayoutDescriptor, BindGroupDescriptor, BindGroupEntry, PipelineLayoutDescriptor, RenderPipelineDescriptor, PrimitiveState, VertexState, FragmentState, ColorTargetState, TextureDescriptor, TextureUsages, TextureDimension, TextureFormat, Extent3d, ImageCopyTexture, ImageDataLayout, CommandEncoderDescriptor, RenderPassDescriptor, LoadOp, StoreOp, Operations};
 use wgpu::util::DeviceExt;
 use p5_layout::LayoutBox;
 
@@ -169,7 +168,7 @@ impl GpuRenderer {
         }
     }
 
-    pub fn render(&self, device: &wgpu::Device, queue: &wgpu::Queue, encoder: &mut wgpu::CommandEncoder) {
+    pub fn render(&self, device: &wgpu::Device, _queue: &wgpu::Queue, encoder: &mut wgpu::CommandEncoder) {
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("P6 bind"),
             layout: &self.bind_group_layout,
