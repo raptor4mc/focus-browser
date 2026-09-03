@@ -123,7 +123,6 @@ impl TreeSink for DomTreeSink {
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
         let tag_id = self.dom.nodes[*target as usize].tag;
         let name = self.tag_name(tag_id);
-        // Use Atom::from for correct conversion; avoid &Atom reference issue
         ExpandedName { local: name.into(), ns: "".into() }
     }
 
