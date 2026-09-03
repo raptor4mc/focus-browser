@@ -25,7 +25,7 @@ impl DomParser {
         let node_idx = self.dom.nodes.len() as u32;
         self.dom.nodes.push(super::Node {
             tag: 0,
-            attrs: 32,
+            attrs: 0,
             text: text_offset,
             flags: super::NodeFlags::IS_TEXT,
             style_index: 0,
@@ -81,7 +81,7 @@ impl TreeSink for DomParser {
         self.dom.nodes.push(super::Node {
             tag: tag_id,
             attrs: attr_offset,
-            text: 32,
+            text: 0,
             flags: super::NodeFlags::IS_ELEMENT,
             style_index: 0,
             layout_index: 0,
@@ -151,4 +151,6 @@ impl TreeSink for DomParser {
     fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
         x == y
     }
+
+    fn add_attrs_if_missing(&mut self, _target: &Self::Handle, _attrs: Vec<Attribute>) {}
 }
