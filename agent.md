@@ -4,7 +4,7 @@
 - **Name:** Focus Browser (codename: `focus-browser`)
 - **Type:** Hobby project, 12-week sprint
 - **Target Audience:** Students, deep-work users, people who want one tab and zero distractions
-- **Philosophy:** One tab. Zero IPC. All RAM and CPU dedicated to the current page. Nothing runs in the background. Single-tab focus lets us optimize that one tab to the extreme: fastest startup, lowest RAM, maximum parallelization. Multi-tab comes later; audio is out; WebAssembly deferred until needed.
+- **Philosophy:** One tab. Zero IPC. All RAM and CPU dedicated to the current page. Nothing runs in the background. Subtitles only — no audio pipeline. WebAssembly excluded permanently. Multi-tab excluded permanently. Single-tab focus lets us optimize that one tab to the extreme: fastest startup, lowest RAM, maximum parallelization.
 - **AI Assistant:** Inkling Small only (1M context, 93 tok/s)
 - **Note:** We never used winit. The window layer has always been implemented with eframe and egui.
 
@@ -294,13 +294,13 @@ No multi-tab / multi-window
 No audio / video / WebRTC / media codecs / DRM
 No extension API
 No adblock (v1)
-No WebAssembly (v1)
+No WebAssembly (excluded permanently)
 No legacy GPU support (OpenGL, D3D11, software fallback)
 No process sandboxing
 Rules for AI
 One part per session. Never implement two parts at once.
 Each part must cargo check independently before moving on.
-Never touch src/main.rs or src/engine/js.rs without explicit human review.
+Never touch src/main.rs or src/engine/js.js without explicit human review.
 Update progress.md and todo.md at the end of every session.
 No integration during part development. Assembly is a separate phase.
 No unsafe unless absolutely necessary.

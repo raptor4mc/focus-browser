@@ -31,7 +31,7 @@
 - [ ] P6: `wgpu` shader compilation must not allow arbitrary SPIR-V injection.
 - [ ] General: No `unsafe` blocks unless required by `eframe`/`egui`/`wgpu` bindings; prefer safe Rust.
 - [ ] General: Single process, no IPC, no background threads that could leak data between tabs (only one tab exists).
-- [ ] General: No multi-tab / multi-window; no audio/video/WebRTC; no extension API; no adblock (v1).
+- [ ] General: No multi-tab / multi-window; no audio/video/WebRTC; subtitles only (read inbuilt subtitles, no audio pipeline).
 - [ ] Note: Window layer uses eframe/egui; winit was never used.
 
 ## Backlog (Not in current phase)
@@ -44,3 +44,4 @@
 Window (P1, eframe/egui) → HTML (P3) → CSS (P4) → DOM tree verification (P3) → Fetch (P2) → Layout (P5) → GPU (P6) → Assembly (ASM1).
 Do not skip steps. Do not integrate early. Verify each part with `cargo check` before moving on.
 Plan: verify skeleton now; then P3.
+```
