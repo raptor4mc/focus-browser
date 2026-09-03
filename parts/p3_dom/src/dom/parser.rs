@@ -165,10 +165,6 @@ impl TreeSink for DomTreeSink {
     fn reparent_children(&mut self, _old_parent: &Self::Handle, _new_parent: &Self::Handle) {
         // Minimal
     }
-
-    fn output(&self) -> &Self::Output {
-        &0
-    }
 }
 
 pub fn parse_html(html: &str, dom: &mut Dom) {
