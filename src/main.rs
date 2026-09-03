@@ -47,6 +47,10 @@ fn main() {
     println!("P3 DOM: root node index = {}, nodes capacity = {}, children capacity = {}",
         root, dom.nodes.capacity(), dom.children.capacity());
 
+    println!("P4 styles: computing styles for flat DOM — no CSSOM, compute once");
+    let style_results = p4_styles::compute_styles(&dom, ".box { color: red; }");
+    println!("P4 styles: computed {} style indices", style_results.len());
+
     println!("P2 fetch: requesting https://example.com...");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let html_text = rt.block_on(async {
@@ -59,11 +63,11 @@ fn main() {
         println!("First 200 chars: {}", &text[..text.len().min(200)]);
         text
     });
-    println!("Skeleton: P1 window + P2 fetch + P3 DOM integrated — GPU-first, multi-threaded tokio");
+    println!("Skeleton: P1 window + P2 fetch + P3 DOM + P4 styles integrated — GPU-first, multi-threaded tokio");
 
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Focus Browser — P1 Window + P2 Fetch + P3 DOM",
+        "Focus Browser — P1 Window + P2 Fetch + P3 DOM + P4 Styles",
         native_options,
         Box::new(|_cc| Ok(Box::new(App { html_text }))),
     ).expect("Event loop error");
