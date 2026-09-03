@@ -9,11 +9,10 @@ struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Render the parsed page from P3 DOM + P4 styles + P5 layout
-            for (i, box_ in self.layout_boxes.iter().enumerate()) {
-                let offset_y = (i as f32) * 20.0;
+            // Render parsed page from P3 DOM + P4 styles + P5 layout
+            for box_ in &self.layout_boxes {
                 let rect = egui::Rect::from_min_size(
-                    egui::pos2(box_.x, box_.y + offset_y),
+                    egui::pos2(box_.x, box_.y),
                     egui::vec2(box_.w, box_.h),
                 );
                 ui.painter().rect_filled(
