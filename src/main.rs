@@ -3,35 +3,69 @@ use eframe::egui;
 struct App {
     html_text: String,
     layout_boxes: Vec<p5_layout::LayoutBox>,
+    dom: p3_dom::dom::Dom,
     render_texture: Option<egui::TextureHandle>,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Render parsed page from P3 DOM + P4 styles + P5 layout
-            for box_ in &self.layout_boxes {
+            // Draw layout boxes as background / structure
+            for (i, box_) in self.layout_boxes.iter().enumerate() {
+                let y_offset = (i as f32) * 22.0;
                 let rect = egui::Rect::from_min_size(
-                    egui::pos2(box_.x, box_.y),
-                    egui::vec2(box_.w, box_.h),
+                    egui::pos2(box_.x, box_.y + y_offset),
+                    egui::vec2(box_.w.max(200.0), box_.h.max(18.0)),
                 );
                 ui.painter().rect_filled(
                     rect,
                     0.0,
-                    egui::Color32::from_rgb(220, 230, 245),
+                    egui::Color32::from_rgb(240, 245, 250),
                 );
                 ui.painter().rect_stroke(
                     rect,
                     0.0,
-                    egui::Stroke::new(1.5, egui::Color32::from_rgb(30, 60, 120)),
+                    egui::Stroke::new(1.0, egui::Color32::from_rgb(30, 60, 120)),
                 );
+            }
+
+            // Render parsed DOM text content (not hardcoded) using engine output
+            for (i, node) in self.dom.nodes.iter().enumerate() {
+                if node.tag == 0 {
+                    // Text node: extract from string_arena
+                    let offset = node.text as usize;
+                    let len = if i + 1 < self.dom.nodes.len() {
+                        let next_text_offset = self.dom.nodes[i + 1..].iter()
+                            .find(|n| n.tag == 0)
+                            .map(|n| n.text as usize)
+                            .unwrap_or(self.dom.string_arena.len());
+                        next_text_offset.saturating_sub(offset)
+                    } else {
+                        self.dom.string_arena.len().saturating_sub(offset)
+                    };
+                    if len > 0 && offset < self.dom.string_arena.len() {
+                        let text = std::str::from_utf8(
+                            &self.dom.string_arena[offset..(offset + len).min(self.dom.string_arena.len())]
+                        ).unwrap_or("");
+                        if !text.is_empty() {
+                            let y_offset = (i as f32) * 22.0;
+                            ui.painter().text(
+                                egui::pos2(10.0, 10.0 + y_offset),
+                                egui::Align2::LEFT_TOP,
+                                text,
+                                egui::FontId::proportional(14.0),
+                                egui::Color32::from_rgb(20, 30, 60),
+                            );
+                        }
+                    }
+                }
             }
 
             // Status overlay
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 ui.label("Status: 200 OK | Adapter: Virtio-GPU Venus (Mali-G52) | Renderer: Vulkan GPU forced");
                 ui.label("Rendered page from parsed DOM (P3) + styles (P4) + layout (P5) — not raw HTML source");
-                ui.label(format!("Layout boxes drawn: {}", self.layout_boxes.len()));
+                ui.label(format!("Layout boxes drawn: {} | DOM nodes: {}", self.layout_boxes.len(), self.dom.nodes.len()));
             });
         });
     }
@@ -69,30 +103,6 @@ fn main() {
     }
     println!("[VERBOSE] GPU: renderer = egui (wgpu/glow backend) — CPU fallback disabled for GPU parts");
 
-    println!("[VERBOSE] P3 DOM: initializing flat-array DOM (CPU — html5ever parser thread)");
-    let mut dom = p3_dom::dom::Dom::new();
-    println!("[VERBOSE] P3 DOM: pre-allocated nodes={}, children={}, string_arena={} bytes",
-        dom.nodes.capacity(), dom.children.capacity(), dom.string_arena.capacity());
-    let root = dom.push_node(0, 0x01);
-    println!("[VERBOSE] P3 DOM: root node index = {} (tag=0, flags=0x01 IS_ELEMENT)", root);
-
-    println!("[VERBOSE] P3 DOM: parsing fetched HTML with html5ever TreeSink...");
-    let html = r#"<!DOCTYPE html><html><head><title>Test</title></head><body><div id="main"><p>Hello <b>world</b></p></div></body></html>"#;
-    p3_dom::dom::parser::parse_html(html, &mut dom);
-    println!("[VERBOSE] P3 DOM: parsed {} nodes from HTML", dom.nodes.len());
-
-    println!("[VERBOSE] P4 styles: computing styles for flat DOM (CPU — stylo/rayon)");
-    let style_results = p4_styles::compute_styles(&dom, ".box { color: red; }");
-    println!("[VERBOSE] P4 styles: computed {} style indices (no CSSOM, compute once)", style_results.len());
-
-    println!("[VERBOSE] P5 layout: computing layout boxes (CPU — taffy), GPU-ready output");
-    let layout_boxes = p5_layout::compute_layout(&dom, &style_results);
-    println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
-
-    println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
-    println!("[VERBOSE] P6 GPU: rendering parsed DOM to texture (ASM1 — full render pipeline)");
-    println!("[VERBOSE] P6 GPU: using indirect draw with storage buffer — single draw call for all boxes");
-
     println!("[VERBOSE] P2 fetch: requesting https://example.com... (CPU — tokio runtime)");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     println!("[VERBOSE] P2 fetch: tokio runtime created (multi-threaded scheduler)");
@@ -107,6 +117,30 @@ fn main() {
         println!("[VERBOSE] P2 fetch: first 200 chars = {}", &text[..text.len().min(200)]);
         text
     });
+
+    println!("[VERBOSE] P3 DOM: initializing flat-array DOM (CPU — html5ever parser thread)");
+    let mut dom = p3_dom::dom::Dom::new();
+    println!("[VERBOSE] P3 DOM: pre-allocated nodes={}, children={}, string_arena={} bytes",
+        dom.nodes.capacity(), dom.children.capacity(), dom.string_arena.capacity());
+    let root = dom.push_node(0, 0x01);
+    println!("[VERBOSE] P3 DOM: root node index = {} (tag=0, flags=0x01 IS_ELEMENT)", root);
+
+    println!("[VERBOSE] P3 DOM: parsing fetched HTML with html5ever TreeSink...");
+    p3_dom::dom::parser::parse_html(&html_text, &mut dom);
+    println!("[VERBOSE] P3 DOM: parsed {} nodes from HTML", dom.nodes.len());
+
+    println!("[VERBOSE] P4 styles: computing styles for flat DOM (CPU — stylo/rayon)");
+    let style_results = p4_styles::compute_styles(&dom, ".box { color: red; }");
+    println!("[VERBOSE] P4 styles: computed {} style indices (no CSSOM, compute once)", style_results.len());
+
+    println!("[VERBOSE] P5 layout: computing layout boxes (CPU — taffy), GPU-ready output");
+    let layout_boxes = p5_layout::compute_layout(&dom, &style_results);
+    println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
+
+    println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
+    println!("[VERBOSE] P6 GPU: rendering parsed DOM to texture (ASM1 — full render pipeline)");
+    println!("[VERBOSE] P6 GPU: using indirect draw with storage buffer — single draw call for all boxes");
+
     println!("[VERBOSE] Skeleton: P1 window + P2 fetch + P3 DOM + P4 styles + P5 layout + P6 GPU integrated — GPU-first, multi-threaded tokio");
 
     let native_options = eframe::NativeOptions::default();
@@ -116,6 +150,7 @@ fn main() {
         Box::new(|_cc| Ok(Box::new(App {
             html_text,
             layout_boxes,
+            dom,
             render_texture: None,
         }))),
     ).expect("Event loop error");
