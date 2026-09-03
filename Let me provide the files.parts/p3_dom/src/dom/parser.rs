@@ -1,8 +1,8 @@
 use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags};
-use html5ever::{Attribute, ExpandedName, QualName};
+use html5ever::{Attribute, ExpandedName};
 use html5ever::tendril::StrTendril;
 use std::collections::HashMap;
-use crate::dom::{Dom, Node};
+use crate::dom::Dom;
 
 pub struct DomTreeSink {
     pub dom: Dom,
@@ -47,11 +47,9 @@ impl TreeSink for DomTreeSink {
     fn create_element(&mut self, name: Self::ElemName<'_>, attrs: Vec<Self::Attribute>, _flags: ElementFlags) -> Self::Handle {
         let tag_str = name.local.as_ref();
         let tag_id = self.intern_tag(tag_str);
-        let idx = self.dom.push_node(tag_id, 0x01); // IS_ELEMENT
-        // Store attrs count in attr_arena (simplified)
+        let idx = self.dom.push_node(tag_id, 0x01);
         if !attrs.is_empty() {
             let offset = self.dom.attr_arena.len() as u32;
-            // Just store count for now; full attr parsing deferred
             self.dom.attr_arena.extend_from_slice(&(attrs.len() as u32).to_le_bytes());
             self.dom.nodes[idx as usize].attrs = offset;
         }
@@ -61,10 +59,9 @@ impl TreeSink for DomTreeSink {
     fn create_text(&mut self, text: StrTendril, parent: Self::Handle) -> Self::Handle {
         let offset = self.dom.string_arena.len() as u32;
         self.dom.string_arena.extend_from_slice(text.as_bytes());
-        let idx = self.dom.push_node(0, 0x02); // IS_TEXT
+        let idx = self.dom.push_node(0, 0x02);
         self.dom.nodes[idx as usize].text = offset;
         self.dom.parent[idx as usize] = parent;
-        // Append to parent's CSR children
         self.append(parent, idx);
         idx
     }
@@ -88,7 +85,6 @@ impl TreeSink for DomTreeSink {
             pos += 1;
         }
         self.dom.children.insert(pos, child);
-        // Shift all children_start > pos by +1
         for i in 0..self.dom.children_start.len() {
             if self.dom.children_start[i] > pos as u32 {
                 self.dom.children_start[i] += 1;
@@ -133,15 +129,14 @@ impl TreeSink for DomTreeSink {
     }
 
     fn set_quirks_mode(&mut self, _mode: QuirksMode) {
-        // Always standards mode; no quirks
+        // Standards mode only
     }
 
     fn append_doctype_to_document(&mut self, _name: StrTendril, _public_id: Option<StrTendril>, _system_id: Option<StrTendril>) {
-        // Ignore or push DOCTYPE node if desired; ignored for now
+        // Ignored
     }
 
     fn foster_parent_in(&mut self, target: Self::Handle, foster_parent: Self::Handle) {
-        // Minimal foster parenting: append to foster parent
         self.append(foster_parent, target);
     }
 }
