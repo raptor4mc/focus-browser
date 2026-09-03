@@ -75,19 +75,6 @@ impl TreeSink for DomParser {
     fn parse_error(&mut self, _msg: std::borrow::Cow<'static, str>) {}
 
     fn get_document(&mut self) -> u32 {
-        if self.dom.nodes.is_empty() {
-            self.dom.nodes.push(super::Node {
-                tag: 0,
-                attrs: 0,
-                text: 0,
-                flags: super::NodeFlags::IS_ELEMENT,
-                style_index: 0,
-                layout_index: 0,
-                _pad: 0,
-            });
-            self.dom.parent.push(u32::MAX);
-            self.temp_children.push(Vec::new());
-        }
         0
     }
 
