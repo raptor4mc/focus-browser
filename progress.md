@@ -75,4 +75,4 @@ Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints stat
 - `reqwest` uses `rustls-tls` (no OpenSSL) to avoid `pkg-config` / `libssl-dev` dependency.
 - GPU-first: `IntegratedGpu` adapter selected; CPU (`llvmpipe`) available only for non-GPU parts.
 - Multi-threaded: `tokio` runtime uses multi-threaded scheduler by default (`features = ["full"]`); future parts (P3 parser, P5 layout) can use `rayon` for CPU parallelism.
-- Optimization goal: single-tab allows extreme optimization — fastest startup, lowest RAM, maximum parallelization. Multi-tab permanently excluded; audio permanently excluded; subtitles only (no audio pipeline); WebAssembly permanently excluded.
+- Optimization goal: single-tab allows extreme optimization — fastest startup, lowest RAM, maximum parallelization. Multi-tab permanently excluded; audio permanently excluded; no subtitle pipeline (external sites handle subtitles); WebAssembly permanently excluded.

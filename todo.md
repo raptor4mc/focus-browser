@@ -31,7 +31,7 @@
 - [ ] P6: `wgpu` shader compilation must not allow arbitrary SPIR-V injection.
 - [ ] General: No `unsafe` blocks unless required by `eframe`/`egui`/`wgpu` bindings; prefer safe Rust.
 - [ ] General: Single process, no IPC, no background threads that could leak data between tabs (only one tab exists).
-- [ ] General: No multi-tab / multi-window; no audio/video/WebRTC; subtitles only (read inbuilt subtitles, no audio pipeline).
+- [ ] General: No multi-tab / multi-window; no audio/video/WebRTC; no subtitle pipeline (external sites handle subtitles).
 - [ ] Note: Window layer uses eframe/egui; winit was never used.
 
 ## Backlog (Not in current phase)
