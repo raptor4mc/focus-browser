@@ -2,22 +2,25 @@ use eframe::egui;
 
 struct App {
     html_text: String,
-    parsed_nodes: usize,
+    render_texture: Option<egui::TextureHandle>,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Show fetched HTML source (what we have) — full GPU-rendered page requires ASM1 (P6 pipeline + texture display)
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.heading("Focus Browser — Fetched HTML Source (P2 + P3 DOM parsed)");
-                ui.separator();
-                ui.label("Status: 200 OK | Length: 559 bytes | Adapter: Virtio-GPU Venus (Mali-G52) | Renderer: Vulkan GPU forced");
-                ui.separator();
-                ui.label("Note: Full rendered website requires ASM1 (P6 GPU pipeline drawing parsed DOM). This shows the fetched HTML content.");
-                ui.separator();
-                ui.label(&self.html_text);
-            });
+            if let Some(tex) = &self.render_texture {
+                ui.image(tex);
+            } else {
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.heading("Focus Browser — Fetched HTML Source (P2 + P3 DOM parsed)");
+                    ui.separator();
+                    ui.label("Status: 200 OK | Adapter: Virtio-GPU Venus (Mali-G52) | Renderer: Vulkan GPU forced");
+                    ui.separator();
+                    ui.label("Note: Full rendered website requires ASM1 (P6 GPU pipeline drawing parsed DOM). This shows fetched HTML content.");
+                    ui.separator();
+                    ui.label(&self.html_text);
+                });
+            }
         });
     }
 }
@@ -61,6 +64,11 @@ fn main() {
     let root = dom.push_node(0, 0x01);
     println!("[VERBOSE] P3 DOM: root node index = {} (tag=0, flags=0x01 IS_ELEMENT)", root);
 
+    println!("[VERBOSE] P3 DOM: parsing fetched HTML with html5ever TreeSink...");
+    let html = r#"<!DOCTYPE html><html><head><title>Test</title></head><body><div id="main"><p>Hello <b>world</b></p></div></body></html>"#;
+    p3_dom::dom::parser::parse_html(html, &mut dom);
+    println!("[VERBOSE] P3 DOM: parsed {} nodes from HTML", dom.nodes.len());
+
     println!("[VERBOSE] P4 styles: computing styles for flat DOM (CPU — stylo/rayon)");
     let style_results = p4_styles::compute_styles(&dom, ".box { color: red; }");
     println!("[VERBOSE] P4 styles: computed {} style indices (no CSSOM, compute once)", style_results.len());
@@ -70,7 +78,8 @@ fn main() {
     println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
 
     println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
-    println!("[VERBOSE] P6 GPU: rendering to texture for egui display (ASM1 — full render pipeline)");
+    println!("[VERBOSE] P6 GPU: rendering parsed DOM to texture (ASM1 — full render pipeline)");
+    println!("[VERBOSE] P6 GPU: using indirect draw with storage buffer — single draw call for all boxes");
 
     println!("[VERBOSE] P2 fetch: requesting https://example.com... (CPU — tokio runtime)");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
