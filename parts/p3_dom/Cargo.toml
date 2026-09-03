@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 html5ever = "0.27"
+markup5ever = "0.12"
 rayon = "1.10"

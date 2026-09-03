@@ -1,6 +1,6 @@
 use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
 use html5ever::{Attribute, QualName};
-use html5ever::tendril::{StrTendril, TendrilSink, Tendril};
+use html5ever::tendril::{StrTendril, TendrilSink};
 use markup5ever::interface::tree_builder::ExpandedName;
 use std::collections::HashMap;
 use crate::dom::Dom;
@@ -58,7 +58,7 @@ impl TreeSink for DomTreeSink {
 
     fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
         let child_idx = match child {
-            NodeOrText::Node(h) => h,
+            NodeOrText::Element(h) => h,
             NodeOrText::Text(h) => h,
         };
         self.dom.parent[child_idx as usize] = *parent;
@@ -72,7 +72,7 @@ impl TreeSink for DomTreeSink {
     fn append_before_sibling(&mut self, sibling: &Self::Handle, child: NodeOrText<Self::Handle>) {
         let parent = self.dom.parent[*sibling as usize];
         let child_idx = match child {
-            NodeOrText::Node(h) => h,
+            NodeOrText::Element(h) => h,
             NodeOrText::Text(h) => h,
         };
         self.dom.parent[child_idx as usize] = parent;
@@ -134,10 +134,6 @@ impl TreeSink for DomTreeSink {
         // Ignored
     }
 
-    fn foster_parent_in(&mut self, target: &Self::Handle, foster_parent: &Self::Handle) {
-        self.append(foster_parent, NodeOrText::Node(*target));
-    }
-
     fn finish(self) -> Self::Output {
         0
     }
@@ -181,7 +177,7 @@ pub fn parse_html(html: &str, dom: &mut Dom) {
 
     let sink = DomTreeSink::new(std::mem::replace(dom, Dom::new()));
     let mut parser = parse_document(sink, ParseOpts::default());
-    parser.process(Tendril::from_slice(html.as_bytes()));
+    parser.process(StrTendril::from_slice(html.as_bytes()));
     parser.finish();
     println!("Parser finished — nodes written to flat array");
 }
