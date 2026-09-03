@@ -1,0 +1,7 @@
+# Focus Browser Progress
+...
+- [ ] P3 `dom` — IN PROGRESS (greenfield flat array, no Rc/RefCell/Box/Arc, html5ever parser, mozjs binding deferred)
+...
+```
+
+I will provide the file listings for the new P3 files and the progress.md update.parts/p3_dom/Cargo.toml
