@@ -1,8 +1,7 @@
-use html5ever::tree_builder::{TreeSink, NodeOrText, ElementFlags, QuirksMode};
+use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
 use html5ever::{QualName, Attribute};
+use html5ever::tendril::{StrTendril, TendrilSink};
 use markup5ever::{ExpandedName, ns};
-use tendril::StrTendril;
-
 use crate::dom::{Dom, Node, NodeFlags};
 
 pub struct DomParser {
@@ -53,7 +52,7 @@ impl TreeSink for DomParser {
             attrs: attr_offset,
             text: 0,
             flags: super::NodeFlags::IS_ELEMENT,
-            style_index: 32,
+            style_index: 0,
             layout_index: 0,
             _pad: 0,
         });
@@ -104,10 +103,9 @@ impl TreeSink for DomParser {
 
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
         let tag_id = self.dom.nodes[*target as usize].tag;
-        let name = self.dom.tag_names.get(tag_id as usize).map(|l| l.as_ref()).unwrap_or("unknown");
         ExpandedName {
             ns: &ns!(html),
-            local: &name,
+            local: &self.dom.tag_names[tag_id as usize],
         }
     }
 
