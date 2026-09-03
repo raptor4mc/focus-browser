@@ -7,14 +7,6 @@ struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.painter().rect_filled(
-                ui.min_rect(),
-                0.0,
-                egui::Color32::BLACK,
-            );
-            ui.label("Renderer: egui (GPU via wgpu/glow) — CPU fallback available");
-            ui.separator();
-            ui.label("Fetched HTML (P2 + P3 DOM — not yet rendered by P4/P5/P6):");
             ui.add(egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.label(&self.html_text);
             }));
@@ -46,8 +38,6 @@ fn main() {
     }
     if let Some(name) = selected {
         println!("Selected GPU adapter: {} (Vulkan, IntegratedGpu)", name);
-    } else {
-        println!("No IntegratedGpu adapter found; falling back to first available");
     }
     println!("Renderer: egui (Vulkan GPU forced) — CPU fallback disabled for GPU parts");
 
