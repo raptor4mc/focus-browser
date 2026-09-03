@@ -3,16 +3,14 @@ use html5ever::{QualName, Attribute};
 use html5ever::tendril::StrTendril;
 use markup5ever::{ExpandedName, Namespace};
 
-use crate::dom::{Dom, Node, NodeFlags};
-
 pub struct DomParser {
-    pub dom: Dom,
+    pub dom: super::Dom,
     temp_children: Vec<Vec<u32>>,
     html_ns: Namespace,
 }
 
 impl DomParser {
-    pub fn new(dom: Dom) -> Self {
+    pub fn new(dom: super::Dom) -> Self {
         Self {
             dom,
             temp_children: Vec::new(),
@@ -75,8 +73,7 @@ impl TreeSink for DomParser {
     }
 
     fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, _flags: ElementFlags) -> u32 {
-        let tag_str = name.local.as_ref();
-        let tag_id = self.dom.intern_tag(&tag_str);
+        let tag_id = self.dom.intern_tag(&name.local);
         let node_idx = self.dom.nodes.len() as u32;
         let attr_offset = self.dom.store_attrs(&attrs);
 
@@ -109,7 +106,7 @@ impl TreeSink for DomParser {
             }
             NodeOrText::AppendText(text) => {
                 let text_node = self.make_text_node(text);
-                self.append(parent, NodeOrText::AppendText(text_node));
+                self.append(parent, NodeOrText::AppendNode(text_node));
             }
         }
     }
