@@ -11,13 +11,12 @@ pub struct LayoutBox {
     pub style_index: u32,
     pub text_offset: u32,
     pub flags: u32,
+    pub _pad: u32,
 }
 
 pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     println!("[VERBOSE] P5 layout: computing layout for {} nodes — CPU only (taffy), GPU-ready output", dom.nodes.len());
     let mut boxes = Vec::with_capacity(dom.nodes.len());
-    // Minimal: create LayoutBox for each node with placeholder positions
-    // Real taffy integration deferred; this produces GPU-uploadable Vec<LayoutBox>
     for (i, _node) in dom.nodes.iter().enumerate() {
         boxes.push(LayoutBox {
             x: 0.0,
@@ -27,8 +26,10 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
             style_index: styles.get(i).copied().unwrap_or(0),
             text_offset: 0,
             flags: 0,
+            _pad: 0,
         });
     }
     println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes each, repr(C), bytemuck-ready)", boxes.len());
     boxes
 }
+```
