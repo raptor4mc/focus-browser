@@ -1,4 +1,5 @@
-use wgpu::{BufferUsages, BufferDescriptor, BindGroupLayoutDescriptor, BindGroupDescriptor, BindGroupEntry, PipelineLayoutDescriptor, RenderPipelineDescriptor, PrimitiveState, VertexState, FragmentState, ColorTargetState, TextureDescriptor, TextureUsage, TextureDimension, TextureFormat, Extent3d, ImageCopyTexture, ImageDataLayout, CommandEncoderDescriptor, RenderPassDescriptor, LoadOp, StoreOp, Operations};
+use wgpu::{BufferUsages, BufferDescriptor, BindGroupLayoutDescriptor, BindGroupDescriptor, BindGroupEntry, PipelineLayoutDescriptor, RenderPipelineDescriptor, PrimitiveState, VertexState, FragmentState, ColorTargetState, TextureDescriptor, TextureUsages, TextureDimension, TextureFormat, Extent3d, ImageCopyTexture, ImageDataLayout, CommandEncoderDescriptor, RenderPassDescriptor, LoadOp, StoreOp, Operations};
+use wgpu::util::DeviceExt;
 use p5_layout::LayoutBox;
 
 pub const SHADER: &str = r#"
@@ -24,27 +25,22 @@ struct VertexOutput {
 };
 
 @vertex
-fn vs_main(@builtin(instance_index) ii: u32) -> VertexOutput {
+fn vs_main(@builtin(instance_index) ii: u32, @builtin(vertex_index) vi: u32) -> VertexOutput {
     let box = boxes[ii];
-    let x = box.x * frame.scale + frame.scroll_x;
-    let y = box.y * frame.scale + frame.scroll_y;
-    let w = box.w * frame.scale;
-    let h = box.h * frame.scale;
-    // Quad: instance_index selects box; vertex_index 0-3 generates corners
-    // Simplified: use instance_index only, generate quad in shader via vertex_index
+    let corner = vi % 4u;
+    let cx = box.x + box.w * 0.5;
+    let cy = box.y + box.h * 0.5;
+    let half_w = box.w * 0.5;
+    let half_h = box.h * 0.5;
+    var px = cx;
+    var py = cy;
+    if (corner == 0u) { px = cx - half_w; py = cy - half_h; }
+    else if (corner == 1u) { px = cx + half_w; py = cy - half_h; }
+    else if (corner == 2u) { px = cx - half_w; py = cy + half_h; }
+    else { px = cx + half_w; py = cy + half_h; }
     var out: VertexOutput;
-    // For indirect draw with 4 vertices per instance, we need vertex_index
-    // This shader assumes vertex_index 0-3 per instance
-    let vi = ii % 4u; // Not correct for indirect; using instance_index as box index
-    // Actually for storage buffer + indirect: instance_index = box index
-    // We generate quad from box dimensions
-    let cx = x + w * 0.5;
-    let cy = y + h * 0.5;
-    let half_w = w * 0.5;
-    let half_h = h * 0.5;
-    // Simple quad generation based on instance (not vertex index for simplicity)
-    out.pos = vec4<f32>(cx / frame.viewport_w * 2.0 - 1.0, -cy / frame.viewport_h * 2.0 + 1.0, 0.0, 1.0);
-    out.color = vec3<f32>(0.8, 0.2, 0.2); // red default
+    out.pos = vec4<f32>((px / frame.viewport_w) * 2.0 - 1.0, -(py / frame.viewport_h) * 2.0 + 1.0, 0.0, 1.0);
+    out.color = vec3<f32>(0.8, 0.2, 0.2);
     return out;
 }
 
@@ -126,7 +122,6 @@ impl GpuRenderer {
             multiview: None,
         });
 
-        // Storage buffer from LayoutBox array
         let storage_data = bytemuck::cast_slice(layout_boxes);
         let storage_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("P6 storage"),
@@ -134,13 +129,12 @@ impl GpuRenderer {
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
 
-        // Indirect draw buffer: 4 vertices per box, 1 instance
         let count = layout_boxes.len() as u32;
         let indirect_data: Vec<u32> = vec![
-            4, // vertex_count
-            count, // instance_count
-            0, // first_vertex
-            0, // first_instance
+            4,
+            count,
+            0,
+            0,
         ];
         let indirect_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("P6 indirect"),
@@ -148,7 +142,6 @@ impl GpuRenderer {
             usage: wgpu::BufferUsages::INDIRECT,
         });
 
-        // Render texture
         let texture_size = wgpu::Extent3d {
             width: 1024,
             height: 768,
@@ -204,7 +197,7 @@ impl GpuRenderer {
 
             render_pass.set_pipeline(&self.pipeline);
             render_pass.set_bind_group(0, &bind_group, &[]);
-            render_pass.set_push_constants(0, bytemuck::cast_slice(&[1024.0f32, 768.0f32, 0.0f32, 0.0f32, 1.0f32]));
+            render_pass.set_push_constants(wgpu::ShaderStages::VERTEX, 0, bytemuck::cast_slice(&[1024.0f32, 768.0f32, 0.0f32, 0.0f32, 1.0f32]));
             render_pass.draw_indirect(&self.indirect_buffer, 0);
         }
     }
