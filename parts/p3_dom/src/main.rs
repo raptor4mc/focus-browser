@@ -24,4 +24,3 @@ fn main() {
 
     println!("No DOM API to JS. No CSSOM. No Shadow DOM. No WASM. Subtitles external.");
 }
-```
