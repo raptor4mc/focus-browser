@@ -43,6 +43,14 @@ fn main() {
         println!("No IntegratedGpu adapter found; falling back to first available");
     }
     println!("Renderer: egui (Vulkan GPU forced) — CPU fallback disabled for GPU parts");
+
+    // P3 DOM merged into skeleton — greenfield flat array, no Rc/RefCell/Box/Arc
+    println!("P3 DOM: initializing flat-array DOM...");
+    let mut dom = p3_dom::dom::Dom::new();
+    let root = dom.push_node(0, 0x01); // tag 0 = html, IS_ELEMENT
+    println!("P3 DOM: root node index = {}, nodes capacity = {}, children capacity = {}",
+        root, dom.nodes.capacity(), dom.children.capacity());
+
     // P2 fetch integrated directly into skeleton (multi-threaded tokio runtime)
     println!("P2 fetch: requesting https://example.com...");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
@@ -55,10 +63,11 @@ fn main() {
         println!("Length: {} bytes", text.len());
         println!("First 200 chars: {}", &text[..text.len().min(200)]);
     });
-    println!("Skeleton: P1 window + P2 fetch integrated — GPU-first, multi-threaded tokio");
+    println!("Skeleton: P1 window + P2 fetch + P3 DOM integrated — GPU-first, multi-threaded tokio");
+
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Focus Browser — P1 Window + P2 Fetch",
+        "Focus Browser — P1 Window + P2 Fetch + P3 DOM",
         native_options,
         Box::new(|_cc| Ok(Box::new(App))),
     ).expect("Event loop error");
