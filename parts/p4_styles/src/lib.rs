@@ -11,3 +11,12 @@ impl TNode for p3_dom::dom::Node {
         self.style_index
     }
 }
+
+pub fn compute_styles(dom: &p3_dom::dom::Dom, _stylesheet: &str) -> Vec<u32> {
+    println!("P4 styles: computing styles for {} nodes — no CSSOM, compute once", dom.nodes.len());
+    let mut results = Vec::with_capacity(dom.nodes.len());
+    for (i, _node) in dom.nodes.iter().enumerate() {
+        results.push(i as u32);
+    }
+    results
+}
