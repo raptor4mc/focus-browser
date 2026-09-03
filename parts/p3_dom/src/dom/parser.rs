@@ -67,19 +67,25 @@ impl TreeSink for DomParser {
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
         let idx = *target as usize;
         if idx >= self.dom.nodes.len() {
+            static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
             return ExpandedName {
                 ns: &self.html_ns,
-                local: &LocalName::from("unknown"),
+                local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
             };
         }
         let node = &self.dom.nodes[idx];
-        let tag_id = node.tag;
-        let name = self.dom.tag_map.iter()
-            .find_map(|(k, &v)| if v == tag_id { Some(k.as_str()) } else { None })
-            .unwrap_or("unknown");
-        ExpandedName {
-            ns: &self.html_ns,
-            local: &LocalName::from(name),
+        let tag_id = node.tag as usize;
+        if tag_id < self.dom.tag_names.len() {
+            ExpandedName {
+                ns: &self.html_ns,
+                local: &self.dom.tag_names[tag_id],
+            }
+        } else {
+            static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
+            ExpandedName {
+                ns: &self.html_ns,
+                local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
+            }
         }
     }
 
