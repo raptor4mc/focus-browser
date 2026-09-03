@@ -25,7 +25,7 @@ impl DomParser {
         let node_idx = self.dom.nodes.len() as u32;
         self.dom.nodes.push(super::Node {
             tag: 0,
-            attrs: 32,
+            attrs: 0,
             text: text_offset,
             flags: super::NodeFlags::IS_TEXT,
             style_index: 0,
@@ -81,7 +81,7 @@ impl TreeSink for DomParser {
         self.dom.nodes.push(super::Node {
             tag: tag_id,
             attrs: attr_offset,
-            text: 32,
+            text: 0,
             flags: super::NodeFlags::IS_ELEMENT,
             style_index: 0,
             layout_index: 0,
@@ -91,14 +91,6 @@ impl TreeSink for DomParser {
         self.dom.parent.push(u32::MAX);
         self.temp_children.push(Vec::new());
         node_idx
-    }
-
-    fn create_comment(&mut self, _text: StrTendril) -> u32 {
-        u32::MAX
-    }
-
-    fn create_pi(&mut self, _target: StrTendril, _data: StrTendril) -> u32 {
-        u32::MAX
     }
 
     fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
@@ -122,13 +114,6 @@ impl TreeSink for DomParser {
 
     fn append_before_sibling(&mut self, _sibling: &Self::Handle, _new_node: NodeOrText<Self::Handle>) {}
 
-    fn append_based_on_parent_node(
-        &mut self,
-        _element: &Self::Handle,
-        _prev_element: &Self::Handle,
-        _new_node: NodeOrText<Self::Handle>,
-    ) {}
-
     fn remove_from_parent(&mut self, target: &Self::Handle) {
         let idx = *target as usize;
         if idx < self.dom.parent.len() {
@@ -151,4 +136,6 @@ impl TreeSink for DomParser {
     fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
         x == y
     }
+
+    fn add_attrs_if_missing(&mut self, _target: &Self::Handle, _attrs: Vec<Attribute>) {}
 }
