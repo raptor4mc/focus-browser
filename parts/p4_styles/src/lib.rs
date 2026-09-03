@@ -11,4 +11,3 @@ impl TNode for p3_dom::dom::Node {
         self.style_index
     }
 }
-```
