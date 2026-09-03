@@ -93,6 +93,14 @@ impl TreeSink for DomParser {
         node_idx
     }
 
+    fn create_comment(&mut self, _text: StrTendril) -> u32 {
+        u32::MAX
+    }
+
+    fn create_pi(&mut self, _target: StrTendril, _data: StrTendril) -> u32 {
+        u32::MAX
+    }
+
     fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
         match child {
             NodeOrText::AppendNode(node) => {
@@ -113,6 +121,13 @@ impl TreeSink for DomParser {
     }
 
     fn append_before_sibling(&mut self, _sibling: &Self::Handle, _new_node: NodeOrText<Self::Handle>) {}
+
+    fn append_based_on_parent_node(
+        &mut self,
+        _element: &Self::Handle,
+        _prev_element: &Self::Handle,
+        _new_node: NodeOrText<Self::Handle>,
+    ) {}
 
     fn remove_from_parent(&mut self, target: &Self::Handle) {
         let idx = *target as usize;
