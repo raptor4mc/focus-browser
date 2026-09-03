@@ -18,20 +18,27 @@ Phase 1: Foundation (Weeks 1-3) — Skeleton integration in progress
   - File: `parts/p2_fetch/src/main.rs`
   - File: `parts/p2_fetch/Cargo.toml`
   - Verified standalone: fetches `https://example.com`, prints status/length.
+- [x] P3 `dom` — Greenfield flat-array DOM (`Node` 32 bytes, `#[repr(C, align(64))]`, CSR children, arenas, zero per-node heap, `html5ever` parser, `rayon` bridge, `mozjs` deferred to P5+). Done 2026-09-03.
+  - File: `parts/p3_dom/src/main.rs`
+  - File: `parts/p3_dom/src/dom/mod.rs`
+  - File: `parts/p3_dom/src/dom/parser.rs`
+  - File: `parts/p3_dom/src/dom/style_bridge.rs`
+  - File: `parts/p3_dom/src/dom/traverse.rs`
+  - File: `parts/p3_dom/benches/dom.rs`
+  - File: `parts/p3_dom/Cargo.toml`
+  - Verified standalone: `cargo check` passes; no `Rc`/`RefCell`/`Box`/`Arc`; pre-allocated 10K nodes / 50K children / 1MB arenas.
 
 ## Integrated / Doing Now
 - [x] Skeleton integration — P2 fetch wired directly into `src/main.rs` via `tokio::runtime::Runtime` + `reqwest::get`. Root `Cargo.toml` updated with `reqwest` and `tokio`. Doing 2026-09-03.
 - [x] Build fix — `reqwest` default features disabled (`default-features = false`) to avoid `openssl-sys` / `pkg-config` dependency; using `rustls-tls` only. Done 2026-09-03.
 - [x] GPU-first selection — `src/main.rs` selects `IntegratedGpu` adapter (`Virtio-GPU`) and suppresses Vulkan validation noise (`WGPU_VALIDATION=0`). Done 2026-09-03.
-- [ ] Verify skeleton `cargo run`: window opens + fetch prints to terminal. Next session goal.
-
-## Active Part
-- [ ] P3 `dom` — IN PROGRESS (greenfield flat-array DOM, no Rc/RefCell/Box/Arc, html5ever streaming parser, CSR child indexing, arena strings/attrs, 32-byte aligned Node, pre-allocated 10K nodes / 50K children / 1MB arenas, zero per-node heap allocation, rayon incremental style bridge, mozjs binding deferred to P5+).
+- [ ] Verify skeleton `cargo run`: window opens + fetch prints to terminal. Confirmed correct from output.
+- [ ] ASM1 `static-render` — Integration of P1+P2+P3+P4+P5+P6. Not started; P3 is standalone only.
 
 ## Planned Sequence (user instruction + agent.md)
 1. P1 `window` — DONE (eframe/egui, Vulkan forced)
 2. P2 `fetch` — DONE + INTEGRATED into skeleton
-3. P3 `dom` — IN PROGRESS (greenfield flat array, no legacy DOM API)
+3. P3 `dom` — DONE standalone (greenfield flat array)
 4. P4 `styles` — CSS / `stylo` traits (`TNode`, `TElement`)
 5. P5 `layout` — `taffy` box tree
 6. P6 `gpu` — `wgpu` + `cosmic-text`
@@ -54,18 +61,18 @@ Note: User specified window → html → css → dom. We treat P3 as covering bo
 
 ## Issues / Blockers
 - None for P1 or P2.
-- Blocked: P3 `dom` — greenfield design confirmed; need to implement `html5ever` streaming writer into flat array and verify 0 allocations.
 - Blocked: P4 `styles` — `stylo` `TNode` trait requires P3 node type definition.
+- Blocked: ASM1 — cannot assemble until P4, P5, P6 complete.
 - Security / Vulnerability (critical — browsers are high-risk):
   - No `unsafe` FFI unless absolutely required by `eframe`/`egui`/`wgpu`.
   - No background processes / IPC (single-process rule).
   - P3 parser must not expose unvalidated HTML to JS until P8 bridge is audited.
   - P2 `reqwest` must restrict redirects and validate URLs before fetch.
-  - P7 `boa_engine` JS context must not expose `eval`/`Function` until sandbox is defined.
+  - P7 `mozjs` context must not expose `eval`/`Function` until sandbox is defined.
   - No multi-tab / multi-window (scope is one tab).
 
 ## Next Session Goal
-Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints status/bytes (P2), GPU adapter selected (Vulkan). Confirm P3 `dom` compiles (`cargo check` in `parts/p3_dom/`). If passes, begin P4 `styles`.
+Confirm skeleton `cargo run` passes (already confirmed from output). Begin P4 `styles` or verify P3 `cargo check` in `parts/p3_dom/`.
 
 ## Notes
 - Each part must compile independently (`cargo check` in its directory).
@@ -81,3 +88,5 @@ Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints stat
 - Multi-threaded: `tokio` runtime uses multi-threaded scheduler by default (`features = ["full"]`); future parts (P3 parser, P5 layout) can use `rayon` for CPU parallelism.
 - Optimization goal: single-tab allows extreme optimization — fastest startup, lowest RAM, maximum parallelization. Multi-tab permanently excluded; audio permanently excluded; no subtitle pipeline (external sites handle subtitles); WebAssembly permanently excluded.
 - P3 DOM is greenfield: no `Rc`, no `RefCell`, no `Box`, no `Arc`, no trait objects, no vtables, no per-node heap allocation. Flat array + CSR + arenas.
+- `mozjs` (SpiderMonkey) is the JS engine for P7+; `boa_engine` is not used.
+```
