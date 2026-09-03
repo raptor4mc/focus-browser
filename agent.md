@@ -45,9 +45,9 @@ plain
 |------|------|--------------|----------------|
 | **P1** | `window` | `eframe` + `egui` window + event loop | Window opens, renders black background, handles close/resize |
 | **P2** | `fetch` | `reqwest` + `tokio` HTTP client | Can `GET https://example.com` and print bytes to console |
-| **P3** | `dom` | `html5ever` → DOM tree | Parses HTML string into traversable DOM (`Rc<Node>`) |
-| **P4** | `styles` | `stylo` trait impl + cascade | Implements `TNode`/`TElement`, computes styles for a DOM |
-| **P5** | `layout` | `taffy` box tree | Converts styled DOM into positioned rectangles |
+| **P3** | `dom` | `html5ever` → flat-array DOM | Parses HTML into 32-byte aligned `Node` array; zero per-node heap; CSR children; arenas |
+| **P4** | `styles` | `stylo` trait impl + cascade | Implements `TNode`/`TElement`, computes styles for flat DOM |
+| **P5** | `layout` | `taffy` box tree | Converts styled flat DOM into positioned rectangles |
 | **P6** | `gpu` | `wgpu` + `cosmic-text` | Renders colored rectangles and text to screen |
 | **ASM1** | `static-render` | **ASSEMBLY:** P1+P2+P3+P4+P5+P6 | Fetches example.com, parses, styles, layouts, renders |
 
@@ -55,8 +55,8 @@ plain
 
 | Part | Name | What It Does | Success Criteria |
 |------|------|--------------|----------------|
-| **P7** | `js-engine` | `boa_engine` context | Creates JS runtime, exposes `console.log` |
-| **P8** | `dom-api` | DOM bridge (`querySelector`, etc.) | JS can read/write DOM nodes via Rust bridge |
+| **P7** | `js-engine` | `mozjs` (SpiderMonkey) context | Creates JS runtime via `mozjs`; exposes minimal binding to flat DOM array |
+| **P8** | `dom-api` | Flat DOM bridge | JS reads flat `Uint32Array` node indices; no per-node JS objects |
 | **P9** | `events` | Input → hit test → dispatch | Click on screen coordinate → find element → fire event |
 | **P10** | `nav` | URL bar + history | Type URL → fetch → render. Back button works. |
 | **ASM2** | `interactive` | **ASSEMBLY:** ASM1+P7+P8+P9+P10 | Can browse Hacker News, click links |
@@ -270,7 +270,7 @@ HTTP	reqwest + tokio	Async fetch
 HTML	html5ever	Streaming parser → DOM
 CSS	stylo (style crate)	Parallel selector matching (Rayon)
 Layout	taffy	Flexbox + Grid
-JS	boa_engine	Pure Rust ECMAScript
+JS	mozjs (SpiderMonkey)	Pure Rust ECMAScript via SpiderMonkey FFI
 GPU	wgpu (Vulkan only)	Direct Vulkan rendering
 Text	cosmic-text	GPU text shaping
 Images	image	JPEG/PNG/WebP decode
