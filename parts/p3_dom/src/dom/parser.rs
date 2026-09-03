@@ -1,14 +1,14 @@
-use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
+use html5ever::tree_builder::{TreeSink, NodeOrText, ElementFlags, QuirksMode};
 use html5ever::{QualName, Attribute};
 use html5ever::tendril::StrTendril;
-use markup5ever::{ExpandedName, LocalName, Namespace};
-use std::collections::HashMap;
+use markup5ever::{ExpandedName, Namespace};
 
 use crate::dom::{Dom, Node, NodeFlags};
 
 pub struct DomParser {
     pub dom: Dom,
     temp_children: Vec<Vec<u32>>,
+    html_ns: Namespace,
 }
 
 impl DomParser {
@@ -16,6 +16,7 @@ impl DomParser {
         Self {
             dom,
             temp_children: Vec::new(),
+            html_ns: Namespace::from("http://www.w3.org/1999/xhtml"),
         }
     }
 
@@ -68,7 +69,7 @@ impl TreeSink for DomParser {
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
         let node = &self.dom.nodes[*target as usize];
         ExpandedName {
-            ns: &Namespace::from("http://www.w3.org/1999/xhtml"),
+            ns: &self.html_ns,
             local: &self.dom.tag_names[node.tag as usize],
         }
     }
@@ -108,14 +109,12 @@ impl TreeSink for DomParser {
             }
             NodeOrText::AppendText(text) => {
                 let text_node = self.make_text_node(text);
-                self.append(parent, NodeOrText::AppendNode(text_node));
+                self.append(parent, NodeOrText::AppendText(text_node));
             }
         }
     }
 
-    fn append_before_sibling(&mut self, _sibling: &Self::Handle, _new_node: NodeOrText<Self::Handle>) {
-        // TODO
-    }
+    fn append_before_sibling(&mut self, _sibling: &Self::Handle, _new_node: NodeOrText<Self::Handle>) {}
 
     fn remove_from_parent(&mut self, target: &Self::Handle) {
         let idx = *target as usize;
@@ -124,9 +123,7 @@ impl TreeSink for DomParser {
         }
     }
 
-    fn reparent_children(&mut self, _node: &Self::Handle, _new_parent: &Self::Handle) {
-        // TODO
-    }
+    fn reparent_children(&mut self, _node: &Self::Handle, _new_parent: &Self::Handle) {}
 
     fn mark_script_already_started(&mut self, _node: &Self::Handle) {}
 
@@ -141,4 +138,6 @@ impl TreeSink for DomParser {
     fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
         x == y
     }
+
+    fn add_attrs_if_missing(&mut self, _target: &Self::Handle, _attrs: Vec<Attribute>) {}
 }
