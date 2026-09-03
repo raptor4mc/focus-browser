@@ -4,7 +4,7 @@
 - **Name:** Focus Browser (codename: `focus-browser`)
 - **Type:** Hobby project, 12-week sprint
 - **Target Audience:** Students, deep-work users, people who want one tab and zero distractions
-- **Philosophy:** One tab. Zero IPC. All RAM and CPU dedicated to the current page. Nothing runs in the background.
+- **Philosophy:** One tab. Zero IPC. All RAM and CPU dedicated to the current page. Nothing runs in the background. Single-tab focus lets us optimize that one tab to the extreme: fastest startup, lowest RAM, maximum parallelization. Multi-tab comes later; audio is out; WebAssembly deferred until needed.
 - **AI Assistant:** Inkling Small only (1M context, 93 tok/s)
 - **Note:** We never used winit. The window layer has always been implemented with eframe and egui.
 
