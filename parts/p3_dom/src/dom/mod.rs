@@ -21,13 +21,16 @@ pub struct Dom {
 
 impl Dom {
     pub fn new() -> Self {
+        const INITIAL_NODES: usize = 10_000;
+        const INITIAL_CHILDREN: usize = 50_000;
+        const INITIAL_STRING_ARENA: usize = 1 << 20;
         Self {
-            nodes: Vec::with_capacity(10_000),
-            children: Vec::with_capacity(50_000),
-            children_start: Vec::with_capacity(10_000),
-            parent: Vec::with_capacity(10_000),
-            string_arena: Vec::with_capacity(1 << 20),
-            attr_arena: Vec::with_capacity(1 << 20),
+            nodes: Vec::with_capacity(INITIAL_NODES),
+            children: Vec::with_capacity(INITIAL_CHILDREN),
+            children_start: Vec::with_capacity(INITIAL_NODES),
+            parent: Vec::with_capacity(INITIAL_NODES),
+            string_arena: Vec::with_capacity(INITIAL_STRING_ARENA),
+            attr_arena: Vec::with_capacity(INITIAL_STRING_ARENA),
             interned_tags: [0; 256],
         }
     }
@@ -48,3 +51,4 @@ impl Dom {
         idx
     }
 }
+```

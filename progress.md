@@ -25,10 +25,13 @@ Phase 1: Foundation (Weeks 1-3) — Skeleton integration in progress
 - [x] GPU-first selection — `src/main.rs` selects `IntegratedGpu` adapter (`Virtio-GPU`) and suppresses Vulkan validation noise (`WGPU_VALIDATION=0`). Done 2026-09-03.
 - [ ] Verify skeleton `cargo run`: window opens + fetch prints to terminal. Next session goal.
 
+## Active Part
+- [ ] P3 `dom` — IN PROGRESS (greenfield flat-array DOM, no Rc/RefCell/Box/Arc, html5ever streaming parser, CSR child indexing, arena strings/attrs, 32-byte aligned Node, pre-allocated 10K nodes / 50K children / 1MB arenas, zero per-node heap allocation, rayon incremental style bridge, mozjs binding deferred to P5+).
+
 ## Planned Sequence (user instruction + agent.md)
 1. P1 `window` — DONE (eframe/egui, Vulkan forced)
 2. P2 `fetch` — DONE + INTEGRATED into skeleton
-3. P3 `dom` — HTML parsing (`html5ever`) + DOM tree (`Rc<Node>`)
+3. P3 `dom` — IN PROGRESS (greenfield flat array, no legacy DOM API)
 4. P4 `styles` — CSS / `stylo` traits (`TNode`, `TElement`)
 5. P5 `layout` — `taffy` box tree
 6. P6 `gpu` — `wgpu` + `cosmic-text`
@@ -47,10 +50,11 @@ Note: User specified window → html → css → dom. We treat P3 as covering bo
 - Integrated P2 directly into skeleton: added `reqwest` + `tokio` to root `Cargo.toml`; added `tokio::runtime::Runtime::new()` + `reqwest::get("https://example.com")` block inside `src/main.rs`; updated `progress.md` and `todo.md`.
 - Fixed `openssl-sys` build failure by setting `reqwest` to `default-features = false, features = ["rustls-tls"]`.
 - Enhanced GPU selection: `src/main.rs` picks `IntegratedGpu` adapter explicitly; suppresses validation layer noise; notes multi-threaded `tokio` runtime.
+- Added P3 greenfield flat-array DOM layer (`parts/p3_dom/`) with `Node` (32 bytes, `#[repr(C, align(64))]`), `Dom` (CSR children, arenas), `parser.rs`, `style_bridge.rs`, `traverse.rs`, `benches/dom.rs`.
 
 ## Issues / Blockers
 - None for P1 or P2.
-- Blocked: P3 `dom` — need to decide `Rc<RefCell<Node>>` vs arena (`indextree`) for parent/child links.
+- Blocked: P3 `dom` — greenfield design confirmed; need to implement `html5ever` streaming writer into flat array and verify 0 allocations.
 - Blocked: P4 `styles` — `stylo` `TNode` trait requires P3 node type definition.
 - Security / Vulnerability (critical — browsers are high-risk):
   - No `unsafe` FFI unless absolutely required by `eframe`/`egui`/`wgpu`.
@@ -61,7 +65,7 @@ Note: User specified window → html → css → dom. We treat P3 as covering bo
   - No multi-tab / multi-window (scope is one tab).
 
 ## Next Session Goal
-Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints status/bytes (P2), GPU adapter selected (Vulkan). If passes, mark skeleton complete and begin P3 `dom`.
+Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints status/bytes (P2), GPU adapter selected (Vulkan). Confirm P3 `dom` compiles (`cargo check` in `parts/p3_dom/`). If passes, begin P4 `styles`.
 
 ## Notes
 - Each part must compile independently (`cargo check` in its directory).
@@ -76,3 +80,4 @@ Run `cargo run` in root to verify skeleton: window opens (P1), fetch prints stat
 - GPU-first: `IntegratedGpu` adapter selected; CPU (`llvmpipe`) available only for non-GPU parts.
 - Multi-threaded: `tokio` runtime uses multi-threaded scheduler by default (`features = ["full"]`); future parts (P3 parser, P5 layout) can use `rayon` for CPU parallelism.
 - Optimization goal: single-tab allows extreme optimization — fastest startup, lowest RAM, maximum parallelization. Multi-tab permanently excluded; audio permanently excluded; no subtitle pipeline (external sites handle subtitles); WebAssembly permanently excluded.
+- P3 DOM is greenfield: no `Rc`, no `RefCell`, no `Box`, no `Arc`, no trait objects, no vtables, no per-node heap allocation. Flat array + CSR + arenas.
