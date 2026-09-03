@@ -1,3 +1,5 @@
+pub mod parser;
+
 #[repr(C, align(64))]
 pub struct Node {
     pub tag: u16,
