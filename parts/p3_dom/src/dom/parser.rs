@@ -10,7 +10,20 @@ pub struct DomParser {
 }
 
 impl DomParser {
-    pub fn new(dom: super::Dom) -> Self {
+    pub fn new(mut dom: super::Dom) -> Self {
+        // Ensure document node exists at index 0 for html5ever
+        if dom.nodes.is_empty() {
+            dom.nodes.push(super::Node {
+                tag: 0,
+                attrs: 0,
+                text: 0,
+                flags: super::NodeFlags::IS_ELEMENT,
+                style_index: 0,
+                layout_index: 0,
+                _pad: 0,
+            });
+            dom.parent.push(u32::MAX);
+        }
         Self {
             dom,
             temp_children: vec![Vec::new()],
