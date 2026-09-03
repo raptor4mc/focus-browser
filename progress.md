@@ -89,4 +89,3 @@ Confirm skeleton `cargo run` passes (already confirmed from output). Begin P4 `s
 - Optimization goal: single-tab allows extreme optimization — fastest startup, lowest RAM, maximum parallelization. Multi-tab permanently excluded; audio permanently excluded; no subtitle pipeline (external sites handle subtitles); WebAssembly permanently excluded.
 - P3 DOM is greenfield: no `Rc`, no `RefCell`, no `Box`, no `Arc`, no trait objects, no vtables, no per-node heap allocation. Flat array + CSR + arenas.
 - `mozjs` (SpiderMonkey) is the JS engine for P7+; `boa_engine` is not used.
-```
