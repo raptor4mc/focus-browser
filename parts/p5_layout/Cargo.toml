@@ -1,0 +1,11 @@
+[package]
+name = "p5_layout"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+taffy = "0.3"
+rayon = "1.10"
+p3_dom = { path = "../p3_dom" }
+p4_styles = { path = "../p4_styles" }
+bytemuck = "1.14"
