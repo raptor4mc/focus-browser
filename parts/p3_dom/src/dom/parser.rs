@@ -13,7 +13,7 @@ impl DomParser {
     pub fn new(dom: super::Dom) -> Self {
         Self {
             dom,
-            temp_children: Vec::new(),
+            temp_children: vec![Vec::new()],
             html_ns: Namespace::from("http://www.w3.org/1999/xhtml"),
         }
     }
