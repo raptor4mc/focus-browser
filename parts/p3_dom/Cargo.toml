@@ -1,7 +1,8 @@
-[package]    
-name = "p3_dom"                                                                                                                                                                                                   
-version = "0.1.0"                                                                                                                                                                                                 
-edition = "2024" 
+[package]
+name = "p3_dom"
+version = "0.1.0"
+edition = "2024"
+
 [dependencies]
 html5ever = "0.27"
-rayon = "1.10" 
+rayon = "1.10"
