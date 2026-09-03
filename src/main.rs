@@ -7,9 +7,9 @@ struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add(egui::ScrollArea::vertical().show(ui, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.label(&self.html_text);
-            }));
+            });
         });
     }
 }
