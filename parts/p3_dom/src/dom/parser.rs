@@ -140,28 +140,3 @@ impl TreeSink for DomTreeSink {
         self.append(foster_parent, target);
     }
 }
-
-pub fn parse_html(html: &str, dom: Dom) -> DomTreeSink {
-    use html5ever::parse_document;
-    use html5ever::tendril::Tendril;
-    use html5ever::ParseOpts;
-
-    let sink = DomTreeSink::new(dom);
-    let mut parser = parse_document(sink, ParseOpts::default());
-    parser.process(Tendril::from_slice(html.as_bytes()));
-    parser.finish();
-    // parse_document consumes sink; we need to extract it back.
-    // Actually parse_document returns Parser<Sink>; after finish we can get sink back?
-    // For simplicity, we assume the sink is consumed; but we need the dom back.
-    // Since parse_document takes sink by value and Parser holds it, after finish we can access it.
-    // However Parser<Sink> doesn't expose sink directly easily.
-    // Alternative: use html5ever::driver::parse_document which may return sink.
-    // For this greenfield build, we use a simpler approach: feed bytes and assume sink is updated.
-    // To return Dom, we need to extract from Parser. Since Parser<Sink> has sink inside,
-    // we can use parser.sink if public, or just not return and rely on side effects.
-    // Given constraints, we'll return the sink by taking it out if possible.
-    // Actually html5ever Parser has `sink` field? Not public.
-    // Workaround: don't return; just let sink be consumed. But user wants to see nodes.
-    // We'll use a wrapper that holds sink in an Option and takes it out after.
-    unimplemented!("Parser consumes sink; use direct integration in main.rs")
-}
