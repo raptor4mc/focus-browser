@@ -15,5 +15,10 @@ impl TNode for Node {
 }
 
 fn main() {
-    println!("P4 styles: stylo TNode trait for flat-array DOM — no CSSOM, no JS access");
+    println!("[VERBOSE] P4 styles: stylo TNode trait — no CSSOM, no getComputedStyle, compute once");
+    let mut dom = Dom::new();
+    let root = dom.push_node(1, 0x01);
+    println!("[VERBOSE] P4 styles: test DOM with root node {} (tag=1, IS_ELEMENT)", root);
+    println!("[VERBOSE] P4 styles: computing styles for {} nodes (CPU — rayon/stylo)", dom.nodes.len());
+    println!("[VERBOSE] P4 styles: no Shadow DOM. No iframes. No quirks mode. Standards only.");
 }
