@@ -140,3 +140,15 @@ impl TreeSink for DomTreeSink {
         self.append(foster_parent, target);
     }
 }
+
+pub fn parse_html(html: &str, dom: &mut Dom) {
+    use html5ever::parse_document;
+    use html5ever::tendril::Tendril;
+    use html5ever::ParseOpts;
+
+    let sink = DomTreeSink::new(std::mem::replace(dom, Dom::new()));
+    let mut parser = parse_document(sink, ParseOpts::default());
+    parser.process(Tendril::from_slice(html.as_bytes()));
+    parser.finish();
+    println!("Parser finished — nodes written to flat array");
+}

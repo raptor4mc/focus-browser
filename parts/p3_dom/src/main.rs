@@ -12,15 +12,22 @@ fn main() {
 
     parser::parse_html(html, &mut dom);
 
-    println!("Node count: {}", dom.nodes.len());
+    println!("Total node count: {}", dom.nodes.len());
     for (i, node) in dom.nodes.iter().enumerate() {
         let tag_name = if node.flags & 0x01 != 0 {
             format!("tag_{}", node.tag)
         } else {
             "text".to_string()
         };
-        println!("Node {}: {} | parent={} | flags={:#06x}", i, tag_name, dom.parent[i], node.flags);
+        let parent = dom.parent[i];
+        let child_count = if i < dom.children_start.len() {
+            let start = dom.children_start[i] as usize;
+            let end = if i + 1 < dom.children_start.len() { dom.children_start[i + 1] as usize } else { dom.children.len() };
+            end.saturating_sub(start)
+        } else { 0 };
+        println!("Node {}: {} | parent={} | child_count={}", i, tag_name, parent, child_count);
     }
 
     println!("No DOM API to JS. No CSSOM. No Shadow DOM. No WASM. Subtitles external.");
 }
+```
