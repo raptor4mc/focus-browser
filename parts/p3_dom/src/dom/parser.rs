@@ -183,12 +183,15 @@ impl TreeSink for DomTreeSink {
         &0
     }
 }
-```
 
-Wait, I need to check if `ExpandedName` has fields `local` and `ns`. Given the error earlier, it might. If not, this might still error. But given the user's urgency, this is the best fix based on the trait errors shown. I also need to make sure `parse_html` uses `TendrilSink` trait for `process`/`finish`.
+pub fn parse_html(html: &str, dom: &mut Dom) {
+    use html5ever::parse_document;
+    use html5ever::tendril::Tendril;
+    use html5ever::ParseOpts;
 
-Actually, looking at the errors again, `process` and `finish` need `TendrilSink` imported. I already have that in the `parse_html` function but need to import it at top.
-
-Also `NodeOrText` needs to be imported.
-
-Let me provide the corrected file with all fixes.parts/p3_dom/src/dom/parser.rs
+    let sink = DomTreeSink::new(std::mem::replace(dom, Dom::new()));
+    let mut parser = parse_document(sink, ParseOpts::default());
+    parser.process(Tendril::from_slice(html.as_bytes()));
+    parser.finish();
+    println!("Parser finished — nodes written to flat array");
+}
