@@ -58,7 +58,7 @@ impl TreeSink for DomTreeSink {
 
     fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
         let child_idx = match child {
-            NodeOrText::Node(h) => h,
+            NodeOrText::Element(h) => h,
             NodeOrText::Text(h) => h,
         };
         self.dom.parent[child_idx as usize] = *parent;
@@ -72,7 +72,7 @@ impl TreeSink for DomTreeSink {
     fn append_before_sibling(&mut self, sibling: &Self::Handle, child: NodeOrText<Self::Handle>) {
         let parent = self.dom.parent[*sibling as usize];
         let child_idx = match child {
-            NodeOrText::Node(h) => h,
+            NodeOrText::Element(h) => h,
             NodeOrText::Text(h) => h,
         };
         self.dom.parent[child_idx as usize] = parent;
