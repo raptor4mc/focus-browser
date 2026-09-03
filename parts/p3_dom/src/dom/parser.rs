@@ -11,7 +11,6 @@ pub struct DomParser {
 
 impl DomParser {
     pub fn new(mut dom: super::Dom) -> Self {
-        // Ensure document node exists at index 0 for html5ever
         if dom.nodes.is_empty() {
             dom.nodes.push(super::Node {
                 tag: 0,
@@ -75,7 +74,22 @@ impl TreeSink for DomParser {
 
     fn parse_error(&mut self, _msg: std::borrow::Cow<'static, str>) {}
 
-    fn get_document(&mut self) -> u32 { 0 }
+    fn get_document(&mut self) -> u32 {
+        if self.dom.nodes.is_empty() {
+            self.dom.nodes.push(super::Node {
+                tag: 0,
+                attrs: 0,
+                text: 0,
+                flags: super::NodeFlags::IS_ELEMENT,
+                style_index: 0,
+                layout_index: 0,
+                _pad: 0,
+            });
+            self.dom.parent.push(u32::MAX);
+            self.temp_children.push(Vec::new());
+        }
+        0
+    }
 
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
         let idx = *target as usize;
@@ -119,7 +133,10 @@ impl TreeSink for DomParser {
         });
 
         self.dom.parent.push(u32::MAX);
-        self.temp_children.push(Vec::new());
+        while self.temp_children.len() <= node_idx as usize {
+            self.temp_children.push(Vec::new());
+        }
+        self.temp_children[node_idx as usize] = Vec::new();
         node_idx
     }
 
@@ -136,9 +153,10 @@ impl TreeSink for DomParser {
             NodeOrText::AppendNode(node) => {
                 let p = *parent as usize;
                 let c = node as usize;
-                if p < self.temp_children.len() {
-                    self.temp_children[p].push(node);
+                while self.temp_children.len() <= p {
+                    self.temp_children.push(Vec::new());
                 }
+                self.temp_children[p].push(node);
                 if c < self.dom.parent.len() {
                     self.dom.parent[c] = *parent;
                 }
