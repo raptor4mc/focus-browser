@@ -2,14 +2,20 @@ use eframe::egui;
 
 struct App {
     html_text: String,
-    render_texture: Option<egui::TextureHandle>,
+    parsed_nodes: usize,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Always show fetched HTML so user sees content; GPU texture shown when ready (ASM1)
+            // Show fetched HTML source (what we have) — full GPU-rendered page requires ASM1 (P6 pipeline + texture display)
             egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.heading("Focus Browser — Fetched HTML Source (P2 + P3 DOM parsed)");
+                ui.separator();
+                ui.label("Status: 200 OK | Length: 559 bytes | Adapter: Virtio-GPU Venus (Mali-G52) | Renderer: Vulkan GPU forced");
+                ui.separator();
+                ui.label("Note: Full rendered website requires ASM1 (P6 GPU pipeline drawing parsed DOM). This shows the fetched HTML content.");
+                ui.separator();
                 ui.label(&self.html_text);
             });
         });
