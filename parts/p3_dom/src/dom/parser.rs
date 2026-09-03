@@ -1,6 +1,6 @@
 use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
-use html5ever::{QualName, Attribute};
-use html5ever::tendril::StrTendril;
+use html5ever::{QualName, Attribute, parse_document};
+use html5ever::tendril::{StrTendril, TendrilSink};
 use markup5ever::{ExpandedName, Namespace};
 
 pub struct DomParser {
@@ -153,4 +153,11 @@ impl TreeSink for DomParser {
     }
 
     fn add_attrs_if_missing(&mut self, _target: &Self::Handle, _attrs: Vec<Attribute>) {}
+}
+
+pub fn parse_html(html: &str, dom: &mut super::Dom) {
+    let old_dom = std::mem::replace(dom, super::Dom::new());
+    let parser = DomParser::new(old_dom);
+    let finished = parse_document(parser, Default::default()).one(html);
+    *dom = finished.dom;
 }
