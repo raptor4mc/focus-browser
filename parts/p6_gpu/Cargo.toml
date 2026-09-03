@@ -1,0 +1,9 @@
+[package]
+name = "p6_gpu"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wgpu = "0.20"
+bytemuck = "1.14"
+p5_layout = { path = "../p5_layout" }
