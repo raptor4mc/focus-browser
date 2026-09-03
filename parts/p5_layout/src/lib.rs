@@ -32,4 +32,3 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes each, repr(C), bytemuck-ready)", boxes.len());
     boxes
 }
-```
