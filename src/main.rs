@@ -15,7 +15,7 @@ impl eframe::App for App {
 }
 
 fn main() {
-    println!("[VERBOSE] Starting Focus Browser skeleton — P1 window + P2 fetch + P3 DOM + P4 styles");
+    println!("[VERBOSE] Starting Focus Browser skeleton — P1 window + P2 fetch + P3 DOM + P4 styles + P5 layout");
     unsafe {
         std::env::set_var("WGPU_BACKEND", "vulkan");
         std::env::set_var("WGPU_VALIDATION", "0");
@@ -57,6 +57,10 @@ fn main() {
     let style_results = p4_styles::compute_styles(&dom, ".box { color: red; }");
     println!("[VERBOSE] P4 styles: computed {} style indices (no CSSOM, compute once)", style_results.len());
 
+    println!("[VERBOSE] P5 layout: computing layout boxes (CPU — taffy), GPU-ready output");
+    let layout_boxes = p5_layout::compute_layout(&dom, &style_results);
+    println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
+
     println!("[VERBOSE] P2 fetch: requesting https://example.com... (CPU — tokio runtime)");
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     println!("[VERBOSE] P2 fetch: tokio runtime created (multi-threaded scheduler)");
@@ -71,11 +75,11 @@ fn main() {
         println!("[VERBOSE] P2 fetch: first 200 chars = {}", &text[..text.len().min(200)]);
         text
     });
-    println!("[VERBOSE] Skeleton: P1 window + P2 fetch + P3 DOM + P4 styles integrated — GPU-first, multi-threaded tokio");
+    println!("[VERBOSE] Skeleton: P1 window + P2 fetch + P3 DOM + P4 styles + P5 layout integrated — GPU-first, multi-threaded tokio");
 
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Focus Browser — P1 Window + P2 Fetch + P3 DOM + P4 Styles",
+        "Focus Browser — P1 Window + P2 Fetch + P3 DOM + P4 Styles + P5 Layout",
         native_options,
         Box::new(|_cc| Ok(Box::new(App { html_text }))),
     ).expect("Event loop error");
