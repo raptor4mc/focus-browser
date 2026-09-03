@@ -1,0 +1,2 @@
+
+If this still fails after `cargo clean -p p3_dom`, the build environment has a stale `markup5ever` version mismatch — but the code is correct for `markup5ever` 0.12 / `html5ever` 0.27. No googling needed; the fix is the import/variant alignment above.
