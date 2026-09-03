@@ -1,2 +1,0 @@
-
-If it still errors after this exact file is saved, run `cargo clean -p p3_dom` — the build cache is holding the old version. You said you're testing locally; this file should compile with `markup5ever` 0.12.
