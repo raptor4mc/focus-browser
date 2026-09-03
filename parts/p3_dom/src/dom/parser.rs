@@ -2,16 +2,17 @@ use html5ever::tree_builder::{TreeSink, QuirksMode, ElementFlags, NodeOrText};
 use html5ever::{QualName, Attribute};
 use html5ever::tendril::{StrTendril, TendrilSink};
 use markup5ever::interface::ExpandedName;
+use markup5ever::Atom;
 use std::collections::HashMap;
 use crate::dom::Dom;
 
 pub struct DomParser {
-    pub dom: super::Dom,
+    pub dom: Dom,
     temp_children: Vec<Vec<u32>>,
 }
 
 impl DomParser {
-    pub fn new(dom: super::Dom) -> Self {
+    pub fn new(dom: Dom) -> Self {
         Self {
             dom,
             temp_children: Vec::new(),
@@ -46,6 +47,24 @@ impl TreeSink for DomParser {
         node_idx
     }
 
+    fn create_text(&mut self, text: StrTendril, parent: Self::Handle) -> Self::Handle {
+        let text_offset = self.dom.string_arena.len() as u32;
+        self.dom.string_arena.extend_from_slice(text.as_bytes());
+        let node_idx = self.dom.nodes.len() as u32;
+        self.dom.nodes.push(super::Node {
+            tag: 0,
+            attrs: 0,
+            text: text_offset,
+            flags: super::NodeFlags::IS_TEXT,
+            style_index: 0,
+            layout_index: 0,
+            _pad: 0,
+        });
+        self.dom.parent.push(parent);
+        self.temp_children.push(Vec::new());
+        node_idx
+    }
+
     fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
         match child {
             NodeOrText::AppendNode(node) => {
@@ -59,14 +78,14 @@ impl TreeSink for DomParser {
                 }
             }
             NodeOrText::AppendText(text) => {
-                let text_node = self.create_text(text);
+                let text_node = self.create_text(text, *parent);
                 self.append(parent, NodeOrText::AppendNode(text_node));
             }
         }
     }
 
     fn append_before_sibling(&mut self, _sibling: &Self::Handle, _new_node: NodeOrText<Self::Handle>) {
-        // TODO: implement if needed for complex HTML
+        // TODO
     }
 
     fn remove_from_parent(&mut self, target: &Self::Handle) {
@@ -85,10 +104,11 @@ impl TreeSink for DomParser {
     }
 
     fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
-        let node = &self.dom.nodes[*target as usize];
+        let tag_id = self.dom.nodes[*target as usize].tag;
+        let name = self.dom.tag_names.get(tag_id as usize).map(|l| l.as_ref()).unwrap_or("unknown");
         ExpandedName {
-            ns: &markup5ever::interface::ns!(html),
-            local: &self.dom.tag_names[node.tag as usize],
+            local: Atom::from(name),
+            ns: Atom::from(""),
         }
     }
 
@@ -142,8 +162,15 @@ impl TreeSink for DomParser {
     fn reparent_children(&mut self, _old_parent: &Self::Handle, _new_parent: &Self::Handle) {
         // Minimal
     }
+}
 
-    fn foster_parent_in(&mut self, target: &Self::Handle, foster_parent: &Self::Handle) {
-        self.append(foster_parent, NodeOrText::AppendNode(*target));
-    }
+pub fn parse_html(html: &str, dom: &mut Dom) {
+    use html5ever::parse_document;
+    use html5ever::ParseOpts;
+
+    let sink = DomParser::new(std::mem::replace(dom, Dom::new()));
+    let mut parser = parse_document(sink, ParseOpts::default());
+    parser.process(StrTendril::from_slice(html));
+    parser.finish();
+    println!("Parser finished — nodes written to flat array");
 }
