@@ -11,3 +11,4 @@ wgpu = "0.20"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 tokio = { version = "1", features = ["full"] }
 rayon = "1.10"
+p3_dom = { path = "parts/p3_dom" }
