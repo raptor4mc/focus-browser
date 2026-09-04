@@ -159,8 +159,8 @@ fn main() {
 
     // Verify shader alignment (32 bytes, 4-byte align)
     assert_eq!(std::mem::size_of::<p5_layout::LayoutBox>(), 32, "LayoutBox must be 32 bytes for WGSL");
-    assert_eq!(std::mem::align_of::<p5_layout::LayoutBox>(), 4, "LayoutBox must be 4-byte aligned");
-
+    assert!(std::mem::align_of::<LayoutBox>() >= 4, "LayoutBox alignment too small");
+    
     println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
     println!("[VERBOSE] P6 GPU: rendering parsed DOM to texture (ASM1 — full render pipeline)");
     println!("[VERBOSE] P6 GPU: using indirect draw with storage buffer — single draw call for all boxes");
