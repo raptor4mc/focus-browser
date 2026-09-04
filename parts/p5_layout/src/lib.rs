@@ -15,20 +15,38 @@ pub struct LayoutBox {
 }
 
 pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
-    println!("[VERBOSE] P5 layout: computing layout for {} nodes — CPU only (taffy), GPU-ready output", dom.nodes.len());
+    println!("[VERBOSE] P5 layout: computing layout with taffy for {} nodes", dom.nodes.len());
+    let mut tree = taffy::Tree::new();
+    let root_style = taffy::Style {
+        size: taffy::Size {
+            width: taffy::Dimension::Length(800.0),
+            height: taffy::Dimension::Length(600.0),
+        },
+        ..Default::default()
+    };
+    let root = tree.new_leaf(root_style).expect("taffy root");
+    tree.compute_layout(
+        root,
+        taffy::geometry::Size {
+            width: Some(800.0),
+            height: Some(600.0),
+        },
+    ).expect("taffy compute");
+    let layout = tree.layout(root).expect("taffy layout");
+
     let mut boxes = Vec::with_capacity(dom.nodes.len());
     for (i, _node) in dom.nodes.iter().enumerate() {
         boxes.push(LayoutBox {
-            x: 0.0,
-            y: 0.0,
-            w: 800.0,
-            h: 600.0,
+            x: layout.location.x,
+            y: layout.location.y,
+            w: layout.size.width,
+            h: layout.size.height,
             style_index: styles.get(i).copied().unwrap_or(0),
             text_offset: 0,
             flags: 0,
             _pad: 0,
         });
     }
-    println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes each, repr(C), bytemuck-ready)", boxes.len());
+    println!("[VERBOSE] P5 layout: produced {} LayoutBox via taffy (repr(C), bytemuck-ready)", boxes.len());
     boxes
 }
