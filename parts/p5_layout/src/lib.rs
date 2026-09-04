@@ -22,8 +22,7 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     let mut taffy_ids = Vec::with_capacity(dom.nodes.len());
 
     // Phase 1: create a taffy leaf for every DOM node
-    for (i, _node) in dom.nodes.iter().enumerate() {
-        // TODO: pull real styles from p4_styles via styles[i] instead of defaults
+    for _ in 0..dom.nodes.len() {
         let style = Style {
             display: Display::Block,
             size: Size::auto(),
@@ -33,12 +32,10 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
         taffy_ids.push(id);
     }
 
-    // Phase 2: wire parent → child edges
-    // Adjust this to however your DOM stores relationships.
-    // Assumption: node.parent is u32, ROOT = u32::MAX
-    for (i, node) in dom.nodes.iter().enumerate() {
-        let parent_idx = node.parent; // <-- change this to match your DOM struct
-        if parent_idx != u32::MAX && parent_idx < dom.nodes.len() as u32 {
+    // Phase 2: wire parent → child edges using dom.parent array
+    for i in 0..dom.nodes.len() {
+        let parent_idx = dom.parent[i];
+        if parent_idx != u32::MAX && (parent_idx as usize) < dom.nodes.len() {
             let parent_id = taffy_ids[parent_idx as usize];
             let child_id = taffy_ids[i];
             let _ = taffy.add_child(parent_id, child_id);
@@ -57,7 +54,7 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
 
     // Phase 4: collect per-node layouts
     let mut boxes = Vec::with_capacity(dom.nodes.len());
-    for (i, _node) in dom.nodes.iter().enumerate() {
+    for i in 0..dom.nodes.len() {
         let layout = taffy.layout(taffy_ids[i]).expect("taffy layout");
         boxes.push(LayoutBox {
             x: layout.location.x,
