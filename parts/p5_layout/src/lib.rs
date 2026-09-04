@@ -18,7 +18,7 @@ pub struct LayoutBox {
 pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     println!("[VERBOSE] P5 layout: computing layout with taffy for {} nodes", dom.nodes.len());
 
-    let mut taffy = TaffyTree::new();
+    let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     let root_style = Style {
         size: Size {
