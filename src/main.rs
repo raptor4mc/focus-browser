@@ -1,4 +1,5 @@
 use eframe::egui;
+use p5_layout::LayoutBox;
 
 struct App {
     html_text: String,
