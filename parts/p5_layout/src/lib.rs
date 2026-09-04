@@ -1,5 +1,6 @@
 use p3_dom::dom::Dom;
 use bytemuck::{Pod, Zeroable};
+use taffy::prelude::*;
 
 #[repr(C, align(8))]
 #[derive(Copy, Clone, Pod, Zeroable, Debug)]
@@ -16,23 +17,28 @@ pub struct LayoutBox {
 
 pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     println!("[VERBOSE] P5 layout: computing layout with taffy for {} nodes", dom.nodes.len());
-    let mut tree = taffy::Tree::new();
-    let root_style = taffy::Style {
-        size: taffy::Size {
-            width: taffy::Dimension::Length(800.0),
-            height: taffy::Dimension::Length(600.0),
+
+    let mut taffy = TaffyTree::new();
+
+    let root_style = Style {
+        size: Size {
+            width: length(800.0),
+            height: length(600.0),
         },
         ..Default::default()
     };
-    let root = tree.new_leaf(root_style).expect("taffy root");
-    tree.compute_layout(
+
+    let root = taffy.new_leaf(root_style).expect("taffy root");
+
+    taffy.compute_layout(
         root,
-        taffy::geometry::Size {
-            width: Some(800.0),
-            height: Some(600.0),
+        Size {
+            width: AvailableSpace::Definite(800.0),
+            height: AvailableSpace::Definite(600.0),
         },
     ).expect("taffy compute");
-    let layout = tree.layout(root).expect("taffy layout");
+
+    let layout = taffy.layout(root).expect("taffy layout");
 
     let mut boxes = Vec::with_capacity(dom.nodes.len());
     for (i, _node) in dom.nodes.iter().enumerate() {
@@ -47,6 +53,7 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
             _pad: 0,
         });
     }
+
     println!("[VERBOSE] P5 layout: produced {} LayoutBox via taffy (repr(C), bytemuck-ready)", boxes.len());
     boxes
 }
