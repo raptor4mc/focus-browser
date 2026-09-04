@@ -78,33 +78,30 @@ impl TreeSink for DomParser {
         0
     }
 
-   fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
-    let idx = *target as usize;
-    if idx >= self.dom.nodes.len() {
-        static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
-        return ExpandedName {
-            ns: &self.html_ns,
-            local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
-        };
-    }
-    let node = &self.dom.nodes[idx];
-    
-    // CRITICAL FIX: tag IDs are 1-based, tag_names is 0-based
-    let tag_idx = (node.tag as usize).saturating_sub(1);
-    
-    if tag_idx < self.dom.tag_names.len() {
-        ExpandedName {
-            ns: &self.html_ns,
-            local: &self.dom.tag_names[tag_idx],
+    fn elem_name<'a>(&'a self, target: &'a Self::Handle) -> ExpandedName<'a> {
+        let idx = *target as usize;
+        if idx >= self.dom.nodes.len() {
+            static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
+            return ExpandedName {
+                ns: &self.html_ns,
+                local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
+            };
         }
-    } else {
-        static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
-        ExpandedName {
-            ns: &self.html_ns,
-            local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
+        let node = &self.dom.nodes[idx];
+        let tag_id = node.tag as usize;
+        if tag_id < self.dom.tag_names.len() {
+            ExpandedName {
+                ns: &self.html_ns,
+                local: &self.dom.tag_names[tag_id],
+            }
+        } else {
+            static UNKNOWN: std::sync::OnceLock<LocalName> = std::sync::OnceLock::new();
+            ExpandedName {
+                ns: &self.html_ns,
+                local: UNKNOWN.get_or_init(|| LocalName::from("unknown")),
+            }
         }
     }
-}
 
     fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, _flags: ElementFlags) -> u32 {
         let tag_str = name.local.as_ref();

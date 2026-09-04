@@ -10,11 +10,15 @@ struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Draw layout boxes as background / structure
+            // Diagnostic: print absolute box positions
             for (i, box_) in self.layout_boxes.iter().enumerate() {
-                let y_offset = (i as f32) * 22.0;
+                println!("Box {}: x={:.1} y={:.1} w={:.1} h={:.1}", i, box_.x, box_.y, box_.w, box_.h);
+            }
+
+            // Draw layout boxes using absolute Y (flattened in main)
+            for box_ in &self.layout_boxes {
                 let rect = egui::Rect::from_min_size(
-                    egui::pos2(box_.x, box_.y + y_offset),
+                    egui::pos2(box_.x, box_.y),
                     egui::vec2(box_.w.max(200.0), box_.h.max(18.0)),
                 );
                 ui.painter().rect_filled(
@@ -29,10 +33,9 @@ impl eframe::App for App {
                 );
             }
 
-            // Render parsed DOM text content (not hardcoded) using engine output
+            // Render parsed DOM text content at layout positions (not hardcoded)
             for (i, node) in self.dom.nodes.iter().enumerate() {
                 if node.tag == 0 {
-                    // Text node: extract from string_arena
                     let offset = node.text as usize;
                     let len = if i + 1 < self.dom.nodes.len() {
                         let next_text_offset = self.dom.nodes[i + 1..].iter()
@@ -48,9 +51,14 @@ impl eframe::App for App {
                             &self.dom.string_arena[offset..(offset + len).min(self.dom.string_arena.len())]
                         ).unwrap_or("");
                         if !text.is_empty() {
-                            let y_offset = (i as f32) * 22.0;
+                            // Use layout box Y if available; otherwise approximate
+                            let y_pos = if i < self.layout_boxes.len() {
+                                self.layout_boxes[i].y + 12.0
+                            } else {
+                                10.0 + (i as f32) * 22.0
+                            };
                             ui.painter().text(
-                                egui::pos2(10.0, 10.0 + y_offset),
+                                egui::pos2(10.0, y_pos),
                                 egui::Align2::LEFT_TOP,
                                 text,
                                 egui::FontId::proportional(14.0),
@@ -134,8 +142,24 @@ fn main() {
     println!("[VERBOSE] P4 styles: computed {} style indices (no CSSOM, compute once)", style_results.len());
 
     println!("[VERBOSE] P5 layout: computing layout boxes (CPU — taffy), GPU-ready output");
-    let layout_boxes = p5_layout::compute_layout(&dom, &style_results);
+    let mut layout_boxes = p5_layout::compute_layout(&dom, &style_results);
     println!("[VERBOSE] P5 layout: produced {} LayoutBox (24 bytes repr(C), bytemuck-ready for wgpu buffer)", layout_boxes.len());
+
+    // Option A: Flatten relative Y to absolute viewport positions
+    for i in 0..layout_boxes.len() {
+        let parent = dom.parent[i] as usize;
+        if parent != u32::MAX as usize && parent < layout_boxes.len() {
+            layout_boxes[i].y += layout_boxes[parent].y;
+        }
+    }
+    println!("[VERBOSE] P5 layout: flattened Y coordinates (absolute)");
+    for (i, box_) in layout_boxes.iter().enumerate() {
+        println!("Box {}: x={:.1} y={:.1} w={:.1} h={:.1}", i, box_.x, box_.y, box_.w, box_.h);
+    }
+
+    // Verify shader alignment (32 bytes, 4-byte align)
+    assert_eq!(std::mem::size_of::<p5_layout::LayoutBox>(), 32, "LayoutBox must be 32 bytes for WGSL");
+    assert_eq!(std::mem::align_of::<p5_layout::LayoutBox>(), 4, "LayoutBox must be 4-byte aligned");
 
     println!("[VERBOSE] P6 GPU: initializing wgpu render pipeline (Vulkan, indirect draw, storage buffer)");
     println!("[VERBOSE] P6 GPU: rendering parsed DOM to texture (ASM1 — full render pipeline)");
