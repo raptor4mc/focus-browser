@@ -81,6 +81,6 @@ impl Dom {
     self.children_start.push(0);
     self.parent.push(u32::MAX);  // was 0
     idx
-}
+
     }
 }
