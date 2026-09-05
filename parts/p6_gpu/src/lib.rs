@@ -84,7 +84,7 @@ impl GpuRenderer {
             bind_group_layouts: &[&bind_group_layout],
             push_constant_ranges: &[wgpu::PushConstantRange {
                 stages: wgpu::ShaderStages::VERTEX,
-                range: 0..16,
+                range: 0..20,
             }],
         });
 
