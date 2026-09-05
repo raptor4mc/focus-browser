@@ -71,11 +71,7 @@ impl eframe::App for App {
             }
 
             // Status overlay
-            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                ui.label("Status: 200 OK | Adapter: Virtio-GPU Venus (Mali-G52) | Renderer: Vulkan GPU forced");
-                ui.label("Rendered page from parsed DOM (P3) + styles (P4) + layout (P5) — not raw HTML source");
-                ui.label(format!("Layout boxes drawn: {} | DOM nodes: {}", self.layout_boxes.len(), self.dom.nodes.len()));
-            });
+        
         });
     }
 }
