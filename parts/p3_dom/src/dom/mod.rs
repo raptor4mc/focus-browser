@@ -67,19 +67,20 @@ impl Dom {
         offset
     }
 
-    pub fn push_node(&mut self, tag: u16, flags: u16) -> u32 {
-        let idx = self.nodes.len() as u32;
-        self.nodes.push(Node {
-            tag,
-            attrs: 0,
-            text: 0,
-            flags,
-            style_index: 0,
-            layout_index: 0,
-            _pad: 0,
-        });
-        self.children_start.push(0);
-        self.parent.push(0);
-        idx
+   pub fn push_node(&mut self, tag: u16, flags: u16) -> u32 {
+    let idx = self.nodes.len() as u32;
+    self.nodes.push(Node {
+        tag,
+        attrs: 0,
+        text: 0,
+        flags,
+        style_index: 0,
+        layout_index: 0,
+        _pad: 0,
+    });
+    self.children_start.push(0);
+    self.parent.push(u32::MAX);  // was 0
+    idx
+}
     }
 }
