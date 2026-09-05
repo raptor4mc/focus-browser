@@ -33,14 +33,18 @@ pub fn compute_layout(dom: &Dom, styles: &[u32]) -> Vec<LayoutBox> {
     }
 
     // Phase 2: wire parent → child edges using dom.parent array
-    for i in 0..dom.nodes.len() {
-        let parent_idx = dom.parent[i];
-        if parent_idx != u32::MAX && (parent_idx as usize) < dom.nodes.len() {
-            let parent_id = taffy_ids[parent_idx as usize];
-            let child_id = taffy_ids[i];
-            let _ = taffy.add_child(parent_id, child_id);
-        }
+   // Phase 2: wire parent → child edges using dom.parent array
+for i in 0..dom.nodes.len() {
+    let parent_idx = dom.parent[i];
+    if parent_idx != u32::MAX
+        && (parent_idx as usize) < dom.nodes.len()
+        && parent_idx != i as u32  // guard: no self-parenting
+    {
+        let parent_id = taffy_ids[parent_idx as usize];
+        let child_id = taffy_ids[i];
+        let _ = taffy.add_child(parent_id, child_id);
     }
+}
 
     // Phase 3: compute layout from root
     let root_id = taffy_ids[0];
